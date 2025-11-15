@@ -7,6 +7,8 @@ import { NewDocumentationDialog } from "@/components/documentation/NewDocumentat
 import { useClients } from "@/hooks/useClients";
 import { useCases } from "@/hooks/useCases";
 import { useDocumentations } from "@/hooks/useDocumentations";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { AudioFile } from "@/types";
 
 export const DashboardActions = () => {
@@ -33,15 +35,117 @@ export const DashboardActions = () => {
 
   const handleSaveDocumentation = async (documentation: any) => {
     try {
-      await createDocumentation({
-        case_id: documentation.caseId,
-        title: documentation.title,
-        date: documentation.date,
-        todos: documentation.todos || "",
-      });
+      // 1. Erstelle die Dokumentation
+      const { data: docData, error: docError } = await supabase
+        .from("documentations")
+        .insert({
+          case_id: documentation.caseId,
+          title: documentation.title,
+          date: documentation.date,
+          todos: documentation.todos || "",
+          transcript_text: documentation.summaryText,
+          summary_text: documentation.summaryText,
+        })
+        .select()
+        .single();
+
+      if (docError) throw docError;
+
+      console.log("Dokumentation erstellt:", docData.id);
+
+      // 2. Lade Audio-Dateien hoch
+      if (documentation.audioFiles && documentation.audioFiles.length > 0) {
+        for (const audio of documentation.audioFiles) {
+          try {
+            // Hole das Blob von der URL
+            const response = await fetch(audio.blobUrl);
+            const blob = await response.blob();
+            
+            // Erstelle File-Objekt
+            const file = new File([blob], audio.fileName, { type: 'audio/webm' });
+            
+            // Lade in Storage hoch
+            const fileExt = audio.fileName.split(".").pop();
+            const fileName = `${docData.id}/${Date.now()}.${fileExt}`;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from("audio-files")
+              .upload(fileName, file, {
+                cacheControl: "3600",
+                upsert: false,
+              });
+
+            if (uploadError) throw uploadError;
+
+            // Erstelle Datenbank-Eintrag
+            const { error: audioDbError } = await supabase
+              .from("audio_files")
+              .insert({
+                documentation_id: docData.id,
+                file_name: audio.fileName,
+                file_path: uploadData.path,
+                mime_type: 'audio/webm',
+                duration_ms: audio.durationMs,
+              });
+
+            if (audioDbError) throw audioDbError;
+            
+            console.log("Audio-Datei hochgeladen:", audio.fileName);
+          } catch (error) {
+            console.error("Fehler beim Audio-Upload:", error);
+          }
+        }
+      }
+
+      // 3. Lade Attachments hoch
+      if (documentation.attachments && documentation.attachments.length > 0) {
+        for (const attachment of documentation.attachments) {
+          try {
+            // Hole das Blob von der URL
+            const response = await fetch(attachment.blobUrl);
+            const blob = await response.blob();
+            
+            // Erstelle File-Objekt
+            const file = new File([blob], attachment.fileName, { type: attachment.fileType });
+            
+            // Lade in Storage hoch
+            const fileExt = attachment.fileName.split(".").pop();
+            const fileName = `${docData.id}/${Date.now()}.${fileExt}`;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from("attachments")
+              .upload(fileName, file, {
+                cacheControl: "3600",
+                upsert: false,
+              });
+
+            if (uploadError) throw uploadError;
+
+            // Erstelle Datenbank-Eintrag
+            const { error: attachmentDbError } = await supabase
+              .from("attachments")
+              .insert({
+                documentation_id: docData.id,
+                file_name: attachment.fileName,
+                file_path: uploadData.path,
+                mime_type: attachment.fileType,
+                size: attachment.size,
+              });
+
+            if (attachmentDbError) throw attachmentDbError;
+            
+            console.log("Attachment hochgeladen:", attachment.fileName);
+          } catch (error) {
+            console.error("Fehler beim Attachment-Upload:", error);
+          }
+        }
+      }
+
+      toast.success("Dokumentation mit allen Dateien gespeichert");
       setShowDocumentationDialog(false);
     } catch (error) {
       console.error("Fehler beim Speichern:", error);
+      toast.error("Fehler beim Speichern der Dokumentation");
     }
   };
 
