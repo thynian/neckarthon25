@@ -3,7 +3,7 @@ import { Client, Case, Documentation } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, ChevronRight } from "lucide-react";
+import { Play, Pause, ChevronRight, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -14,6 +14,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TeamAreaProps {
   clients: Client[];
@@ -31,6 +38,7 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   const [selectedCaseId, setSelectedCaseId] = useState<string | undefined>();
   const [selectedDocumentationId, setSelectedDocumentationId] = useState<string | undefined>();
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Helper functions
   const getClientName = (clientId: string) => {
@@ -126,32 +134,47 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
     setSelectedDocumentationId(undefined);
   };
 
+  // Sort function
+  const sortByDate = <T extends { createdAt: string }>(items: T[]): T[] => {
+    return [...items].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  };
+
   // Filter functions
-  const filteredClients = clients.filter((client) =>
-    client.name.toLowerCase().includes(teamSearch.toLowerCase())
+  const filteredClients = sortByDate(
+    clients.filter((client) =>
+      client.name.toLowerCase().includes(teamSearch.toLowerCase())
+    )
   );
 
-  const filteredCases = cases.filter((caseItem) => {
-    const searchLower = teamSearch.toLowerCase();
-    const clientName = getClientName(caseItem.clientId);
-    return (
-      caseItem.title.toLowerCase().includes(searchLower) ||
-      caseItem.caseId.toLowerCase().includes(searchLower) ||
-      clientName.toLowerCase().includes(searchLower)
-    );
-  });
+  const filteredCases = sortByDate(
+    cases.filter((caseItem) => {
+      const searchLower = teamSearch.toLowerCase();
+      const clientName = getClientName(caseItem.clientId);
+      return (
+        caseItem.title.toLowerCase().includes(searchLower) ||
+        caseItem.caseId.toLowerCase().includes(searchLower) ||
+        clientName.toLowerCase().includes(searchLower)
+      );
+    })
+  );
 
-  const filteredDocumentations = documentations.filter((doc) => {
-    const searchLower = teamSearch.toLowerCase();
-    const relatedCase = cases.find((c) => c.id === doc.caseId);
-    const clientName = relatedCase ? getClientName(relatedCase.clientId) : "";
-    return (
-      doc.title.toLowerCase().includes(searchLower) ||
-      relatedCase?.title.toLowerCase().includes(searchLower) ||
-      relatedCase?.caseId.toLowerCase().includes(searchLower) ||
-      clientName.toLowerCase().includes(searchLower)
-    );
-  });
+  const filteredDocumentations = sortByDate(
+    documentations.filter((doc) => {
+      const searchLower = teamSearch.toLowerCase();
+      const relatedCase = cases.find((c) => c.id === doc.caseId);
+      const clientName = relatedCase ? getClientName(relatedCase.clientId) : "";
+      return (
+        doc.title.toLowerCase().includes(searchLower) ||
+        relatedCase?.title.toLowerCase().includes(searchLower) ||
+        relatedCase?.caseId.toLowerCase().includes(searchLower) ||
+        clientName.toLowerCase().includes(searchLower)
+      );
+    })
+  );
 
   // Selected entities
   const selectedClient = clients.find((c) => c.id === selectedClientId);
@@ -196,9 +219,11 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
     // Case List View (either for selected client or all cases)
     if (teamLevel === "cases") {
       const casesToShow = selectedClient 
-        ? getCasesForClient(selectedClient.id).filter((caseItem) =>
-            caseItem.title.toLowerCase().includes(teamSearch.toLowerCase()) ||
-            caseItem.caseId.toLowerCase().includes(teamSearch.toLowerCase())
+        ? sortByDate(
+            getCasesForClient(selectedClient.id).filter((caseItem) =>
+              caseItem.title.toLowerCase().includes(teamSearch.toLowerCase()) ||
+              caseItem.caseId.toLowerCase().includes(teamSearch.toLowerCase())
+            )
           )
         : filteredCases;
 
@@ -256,8 +281,10 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
     // Documentation List View (either for selected case or all docs)
     if (teamLevel === "docs") {
       const docsToShow = selectedCase
-        ? getDocumentationsForCase(selectedCase.id).filter((doc) =>
-            doc.title.toLowerCase().includes(teamSearch.toLowerCase())
+        ? sortByDate(
+            getDocumentationsForCase(selectedCase.id).filter((doc) =>
+              doc.title.toLowerCase().includes(teamSearch.toLowerCase())
+            )
           )
         : filteredDocumentations;
 
@@ -515,6 +542,23 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
           )}
         </BreadcrumbList>
       </Breadcrumb>
+
+      {/* Sort Control */}
+      <div className="flex items-center justify-end gap-2">
+        <label className="text-sm text-muted-foreground flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4" />
+          <span className="hidden sm:inline">Sortierung:</span>
+        </label>
+        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "asc" | "desc")}>
+          <SelectTrigger className="w-[160px] sm:w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="desc">Neueste zuerst</SelectItem>
+            <SelectItem value="asc">Älteste zuerst</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Single content area */}
       <div>{renderContent()}</div>
