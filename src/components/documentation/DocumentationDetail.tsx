@@ -434,7 +434,7 @@ export const DocumentationDetail = ({
                   <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-md">
                     {editingTopicIndex === index ? (
                       <>
-                        <Input
+                        <Textarea
                           value={editingTopicText}
                           onChange={(e) => setEditingTopicText(e.target.value)}
                           className="flex-1"
