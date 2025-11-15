@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { ContentArea } from "@/components/ContentArea";
-import { Client, Case, Documentation } from "@/types";
+import { Client, Case, Documentation, AudioFile } from "@/types";
 
 type TabType = "offen" | "mein-bereich" | "team-bereich";
 
@@ -12,6 +12,8 @@ interface IndexProps {
   setCases: React.Dispatch<React.SetStateAction<Case[]>>;
   documentations: Documentation[];
   setDocumentations: React.Dispatch<React.SetStateAction<Documentation[]>>;
+  audioFiles: AudioFile[];
+  setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
 }
 
 const Index = ({
@@ -21,6 +23,8 @@ const Index = ({
   setCases,
   documentations,
   setDocumentations,
+  audioFiles,
+  setAudioFiles,
 }: IndexProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("offen");
 
@@ -35,6 +39,8 @@ const Index = ({
         setCases={setCases}
         documentations={documentations}
         setDocumentations={setDocumentations}
+        audioFiles={audioFiles}
+        setAudioFiles={setAudioFiles}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Client, Case, Documentation } from "@/types";
+import { Client, Case, Documentation, AudioFile } from "@/types";
 import { Dashboard } from "./dashboard/Dashboard";
 
 type TabType = "offen" | "mein-bereich" | "team-bereich";
@@ -11,6 +11,8 @@ interface ContentAreaProps {
   setCases: React.Dispatch<React.SetStateAction<Case[]>>;
   documentations: Documentation[];
   setDocumentations: React.Dispatch<React.SetStateAction<Documentation[]>>;
+  audioFiles: AudioFile[];
+  setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
 }
 
 const contentMap: Record<TabType, { title: string; description: string }> = {
@@ -33,6 +35,8 @@ export const ContentArea = ({
   clients,
   cases,
   documentations,
+  audioFiles,
+  setAudioFiles,
 }: ContentAreaProps) => {
   const content = contentMap[activeTab];
 
@@ -53,6 +57,8 @@ export const ContentArea = ({
             clients={clients}
             cases={cases}
             documentations={documentations}
+            audioFiles={audioFiles}
+            setAudioFiles={setAudioFiles}
           />
         ) : (
           <div className="space-y-6">

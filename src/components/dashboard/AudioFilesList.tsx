@@ -1,15 +1,19 @@
+import { useState } from "react";
 import { Documentation, AudioFile } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Plus } from "lucide-react";
+import { Play, Plus, Pause } from "lucide-react";
 
 interface AudioFilesListProps {
   documentations: Documentation[];
+  audioFiles: AudioFile[];
 }
 
-export const AudioFilesList = ({ documentations }: AudioFilesListProps) => {
-  // Sammle alle Audio-Dateien aus allen Dokumentationen
-  const allAudioFiles: (AudioFile & { docTitle: string })[] = [];
+export const AudioFilesList = ({ documentations, audioFiles }: AudioFilesListProps) => {
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  
+  // Sammle alle Audio-Dateien aus Dokumentationen
+  const allAudioFiles: (AudioFile & { docTitle?: string })[] = [];
   
   documentations.forEach((doc) => {
     doc.audioFiles.forEach((audio) => {
@@ -20,6 +24,14 @@ export const AudioFilesList = ({ documentations }: AudioFilesListProps) => {
     });
   });
 
+  // Füge eigenständige Audio-Dateien hinzu
+  audioFiles.forEach((audio) => {
+    allAudioFiles.push({
+      ...audio,
+      docTitle: undefined,
+    });
+  });
+
   const formatDuration = (durationMs: number): string => {
     const totalSeconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -27,8 +39,22 @@ export const AudioFilesList = ({ documentations }: AudioFilesListProps) => {
     return `${minutes}:${seconds.toString().padStart(2, "0")} min`;
   };
 
-  const handlePlayAudio = (audioId: string) => {
-    console.log("Abspielen Audio:", audioId);
+  const handlePlayAudio = (audioId: string, blobUrl: string) => {
+    if (playingAudioId === audioId) {
+      // Stop playing
+      setPlayingAudioId(null);
+    } else {
+      // Start playing
+      setPlayingAudioId(audioId);
+      
+      // Create audio element and play
+      const audio = new Audio(blobUrl);
+      audio.play();
+      
+      audio.onended = () => {
+        setPlayingAudioId(null);
+      };
+    }
   };
 
   const handleAddToDocumentation = (audioId: string) => {
@@ -62,6 +88,9 @@ export const AudioFilesList = ({ documentations }: AudioFilesListProps) => {
                   <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
                     Datum
                   </th>
+                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
+                    Vorschau
+                  </th>
                   <th className="pb-3 text-right text-sm font-medium text-muted-foreground">
                     Aktionen
                   </th>
@@ -74,7 +103,7 @@ export const AudioFilesList = ({ documentations }: AudioFilesListProps) => {
                       {audio.fileName}
                     </td>
                     <td className="py-4 text-sm text-muted-foreground">
-                      {audio.docTitle}
+                      {audio.docTitle || "—"}
                     </td>
                     <td className="py-4 text-sm text-muted-foreground">
                       {formatDuration(audio.durationMs)}
@@ -86,15 +115,27 @@ export const AudioFilesList = ({ documentations }: AudioFilesListProps) => {
                         year: "numeric",
                       })}
                     </td>
+                    <td className="py-4">
+                      <audio controls src={audio.blobUrl} className="h-8" />
+                    </td>
                     <td className="py-4 text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handlePlayAudio(audio.id)}
+                          onClick={() => handlePlayAudio(audio.id, audio.blobUrl)}
                         >
-                          <Play className="h-4 w-4 mr-1" />
-                          Abspielen
+                          {playingAudioId === audio.id ? (
+                            <>
+                              <Pause className="h-4 w-4 mr-1" />
+                              Stop
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4 mr-1" />
+                              Abspielen
+                            </>
+                          )}
                         </Button>
                         <Button
                           size="sm"

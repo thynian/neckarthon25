@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import { Client, Case, Documentation } from "@/types";
+import { Client, Case, Documentation, AudioFile } from "@/types";
 import { mockClients, mockCases, mockDocumentations } from "@/data/mockData";
 
 const queryClient = new QueryClient();
@@ -16,6 +16,7 @@ const App = () => {
   const [clients, setClients] = useState<Client[]>(mockClients);
   const [cases, setCases] = useState<Case[]>(mockCases);
   const [documentations, setDocumentations] = useState<Documentation[]>(mockDocumentations);
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -34,6 +35,8 @@ const App = () => {
                   setCases={setCases}
                   documentations={documentations}
                   setDocumentations={setDocumentations}
+                  audioFiles={audioFiles}
+                  setAudioFiles={setAudioFiles}
                 />
               }
             />
