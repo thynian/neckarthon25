@@ -1,42 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export type DocumentationStatus = "OPEN" | "IN_REVIEW" | "DONE";
-
-export type AudioFile = {
-  id: string;
-  file_name: string;
-  file_path: string;
-  mime_type: string;
-  duration_ms: number | null;
-  created_at: string;
-  documentation_id: string;
-};
-
-export type Attachment = {
-  id: string;
-  file_name: string;
-  file_path: string;
-  mime_type: string;
-  size: number;
-  created_at: string;
-  documentation_id: string;
-};
-
-export type Documentation = {
-  id: string;
-  case_id: string;
-  title: string;
-  date: string;
-  todos: string;
-  status: DocumentationStatus;
-  created_at: string;
-  transcript_text: string | null;
-  summary_text: string | null;
-  audio_files?: AudioFile[];
-  attachments?: Attachment[];
-};
+import type { Documentation, DocumentationStatus, AudioFile, Attachment } from "@/types";
 
 export const useDocumentations = (caseId?: string) => {
   const queryClient = useQueryClient();
@@ -60,7 +25,34 @@ export const useDocumentations = (caseId?: string) => {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as Documentation[];
+      
+      // Transform to match Documentation type
+      return (data || []).map(item => ({
+        id: item.id,
+        caseId: item.case_id,
+        title: item.title,
+        date: item.date,
+        todos: item.todos || "",
+        status: item.status as DocumentationStatus,
+        createdAt: item.created_at,
+        transcriptText: item.transcript_text,
+        summaryText: item.summary_text,
+        audioFiles: (item.audio_files || []).map((af: any) => ({
+          id: af.id,
+          fileName: af.file_name,
+          createdAt: af.created_at,
+          durationMs: af.duration_ms || 0,
+          blobUrl: `${supabase.storage.from('audio-files').getPublicUrl(af.file_path).data.publicUrl}`,
+          transcriptText: undefined,
+        })) as AudioFile[],
+        attachments: (item.attachments || []).map((att: any) => ({
+          id: att.id,
+          fileName: att.file_name,
+          fileType: att.mime_type,
+          size: att.size,
+          blobUrl: `${supabase.storage.from('attachments').getPublicUrl(att.file_path).data.publicUrl}`,
+        })) as Attachment[],
+      })) as Documentation[];
     },
   });
 
@@ -99,7 +91,7 @@ export const useDocumentations = (caseId?: string) => {
       updates 
     }: { 
       id: string; 
-      updates: Partial<Pick<Documentation, "title" | "date" | "todos" | "status" | "transcript_text" | "summary_text">> 
+      updates: Record<string, any>
     }) => {
       const { data, error } = await supabase
         .from("documentations")

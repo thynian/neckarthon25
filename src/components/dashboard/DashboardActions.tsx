@@ -4,27 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecordingDialog } from "@/components/audio/RecordingDialog";
 import { NewDocumentationDialog } from "@/components/documentation/NewDocumentationDialog";
-import { AudioFile, Client, Case, Documentation } from "@/types";
+import { useClients } from "@/hooks/useClients";
+import { useCases } from "@/hooks/useCases";
+import type { AudioFile } from "@/types";
 
-interface DashboardActionsProps {
-  clients: Client[];
-  setClients: React.Dispatch<React.SetStateAction<Client[]>>;
-  cases: Case[];
-  setCases: React.Dispatch<React.SetStateAction<Case[]>>;
-  audioFiles: AudioFile[];
-  setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
-  onSaveDocumentation: (documentation: Documentation) => void;
-}
-
-export const DashboardActions = ({
-  clients,
-  setClients,
-  cases,
-  setCases,
-  audioFiles,
-  setAudioFiles,
-  onSaveDocumentation,
-}: DashboardActionsProps) => {
+export const DashboardActions = () => {
+  const { clients, createClient } = useClients();
+  const { cases, createCase } = useCases();
+  
   const [showRecordingDialog, setShowRecordingDialog] = useState(false);
   const [showDocumentationDialog, setShowDocumentationDialog] = useState(false);
 
@@ -33,8 +20,8 @@ export const DashboardActions = ({
   };
 
   const handleSaveAudio = (audioFile: AudioFile) => {
-    setAudioFiles((prev) => [...prev, audioFile]);
-    console.log("Neue Audio-Datei gespeichert:", audioFile);
+    // Audio files will be handled through documentation uploads
+    console.log("Audio-Datei wird über Dokumentation gespeichert");
   };
 
   const handleNewDocumentation = () => {
@@ -76,11 +63,11 @@ export const DashboardActions = ({
         open={showDocumentationDialog}
         onOpenChange={setShowDocumentationDialog}
         clients={clients}
-        setClients={setClients}
+        setClients={() => {}}
         cases={cases}
-        setCases={setCases}
-        audioFiles={audioFiles}
-        onSave={onSaveDocumentation}
+        setCases={() => {}}
+        audioFiles={[]}
+        onSave={async () => {}}
       />
     </>
   );

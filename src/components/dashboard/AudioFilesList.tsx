@@ -1,38 +1,23 @@
 import { useState } from "react";
-import { Documentation, AudioFile } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Plus, Pause, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Play, Pause } from "lucide-react";
+import { useDocumentations } from "@/hooks/useDocumentations";
+import type { AudioFile } from "@/types";
 
-interface AudioFilesListProps {
-  documentations: Documentation[];
-  audioFiles: AudioFile[];
-  setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
-}
-
-export const AudioFilesList = ({ documentations, audioFiles, setAudioFiles }: AudioFilesListProps) => {
+export const AudioFilesList = () => {
+  const { documentations } = useDocumentations();
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   
   // Sammle alle Audio-Dateien aus Dokumentationen
-  const allAudioFiles: (AudioFile & { docTitle?: string; isInDoc?: boolean })[] = [];
+  const allAudioFiles: (AudioFile & { docTitle?: string })[] = [];
   
   documentations.forEach((doc) => {
-    doc.audioFiles.forEach((audio) => {
+    (doc.audioFiles || []).forEach((audio) => {
       allAudioFiles.push({
         ...audio,
         docTitle: doc.title,
-        isInDoc: true,
       });
-    });
-  });
-
-  // Füge eigenständige Audio-Dateien hinzu
-  audioFiles.forEach((audio) => {
-    allAudioFiles.push({
-      ...audio,
-      docTitle: undefined,
-      isInDoc: false,
     });
   });
 
@@ -58,17 +43,6 @@ export const AudioFilesList = ({ documentations, audioFiles, setAudioFiles }: Au
       audio.onended = () => {
         setPlayingAudioId(null);
       };
-    }
-  };
-
-  const handleAddToDocumentation = (audioId: string) => {
-    console.log("Zu Dokumentation hinzufügen:", audioId);
-  };
-
-  const handleDeleteAudio = (audioId: string) => {
-    if (confirm("Möchten Sie diese Audiodatei wirklich löschen?")) {
-      setAudioFiles((prev) => prev.filter((af) => af.id !== audioId));
-      toast.success("Audiodatei gelöscht");
     }
   };
 
@@ -113,40 +87,20 @@ export const AudioFilesList = ({ documentations, audioFiles, setAudioFiles }: Au
                     size="sm"
                     variant="ghost"
                     onClick={() => handlePlayAudio(audio.id, audio.blobUrl)}
-                    className="text-xs px-2 py-1"
+                    className="h-7 px-2 text-xs"
                   >
                     {playingAudioId === audio.id ? (
                       <>
-                        <Pause className="h-3 w-3 mr-1" />
-                        Stop
+                        <Pause className="mr-1 h-3 w-3" />
+                        Pause
                       </>
                     ) : (
                       <>
-                        <Play className="h-3 w-3 mr-1" />
-                        Abspielen
+                        <Play className="mr-1 h-3 w-3" />
+                        Play
                       </>
                     )}
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleAddToDocumentation(audio.id)}
-                    className="text-xs px-2 py-1"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Zu Dokumentation hinzufügen
-                  </Button>
-                  {!audio.isInDoc && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDeleteAudio(audio.id)}
-                      className="text-xs px-2 py-1 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Löschen
-                    </Button>
-                  )}
                 </div>
               </div>
             ))}

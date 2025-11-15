@@ -1,52 +1,44 @@
 import { useState } from "react";
-import { Client, Case, Documentation, AudioFile } from "@/types";
 import { DashboardActions } from "./DashboardActions";
 import { OpenDocumentations } from "./OpenDocumentations";
 import { AudioFilesList } from "./AudioFilesList";
 import { DocumentationDetail } from "../documentation/DocumentationDetail";
-import { toast } from "sonner";
+import { useClients } from "@/hooks/useClients";
+import { useCases } from "@/hooks/useCases";
+import { useDocumentations } from "@/hooks/useDocumentations";
+import type { Documentation } from "@/types";
 
-interface DashboardProps {
-  clients: Client[];
-  setClients: React.Dispatch<React.SetStateAction<Client[]>>;
-  cases: Case[];
-  setCases: React.Dispatch<React.SetStateAction<Case[]>>;
-  documentations: Documentation[];
-  setDocumentations: React.Dispatch<React.SetStateAction<Documentation[]>>;
-  audioFiles: AudioFile[];
-  setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
-}
-
-export const Dashboard = ({
-  clients,
-  setClients,
-  cases,
-  setCases,
-  documentations,
-  setDocumentations,
-  audioFiles,
-  setAudioFiles,
-}: DashboardProps) => {
+export const Dashboard = () => {
+  const { clients } = useClients();
+  const { cases } = useCases();
+  const { documentations, updateDocumentation, deleteDocumentation } = useDocumentations();
+  
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
-
-  const handleSaveDocumentation = (documentation: Documentation) => {
-    setDocumentations((prev) => [...prev, documentation]);
-    console.log("Neue Dokumentation gespeichert:", documentation);
-  };
 
   const handleOpenDocumentation = (docId: string) => {
     setSelectedDocId(docId);
   };
 
-  const handleUpdateDocumentation = (updatedDoc: Documentation) => {
-    setDocumentations((prev) =>
-      prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
-    );
+  const handleUpdateDocumentation = async (updatedDoc: Documentation) => {
+    // Map camelCase to snake_case for database
+    const updates: any = {};
+    if (updatedDoc.title !== undefined) updates.title = updatedDoc.title;
+    if (updatedDoc.date !== undefined) updates.date = updatedDoc.date;
+    if (updatedDoc.todos !== undefined) updates.todos = updatedDoc.todos;
+    if (updatedDoc.status !== undefined) updates.status = updatedDoc.status;
+    if ((updatedDoc as any).transcriptText !== undefined) updates.transcript_text = (updatedDoc as any).transcriptText;
+    if ((updatedDoc as any).summaryText !== undefined) updates.summary_text = (updatedDoc as any).summaryText;
+    
+    await updateDocumentation({
+      id: updatedDoc.id,
+      updates,
+    });
     setSelectedDocId(null);
   };
 
-  const handleDeleteDocumentation = (docId: string) => {
-    setDocumentations((prev) => prev.filter((doc) => doc.id !== docId));
+  const handleDeleteDocumentation = async (docId: string) => {
+    await deleteDocumentation(docId);
+    setSelectedDocId(null);
   };
 
   const selectedDoc = documentations.find((doc) => doc.id === selectedDocId);
@@ -57,7 +49,7 @@ export const Dashboard = ({
         documentation={selectedDoc}
         clients={clients}
         cases={cases}
-        audioFiles={audioFiles}
+        audioFiles={selectedDoc.audioFiles || []}
         onBack={() => setSelectedDocId(null)}
         onSave={handleUpdateDocumentation}
         onDelete={handleDeleteDocumentation}
@@ -78,15 +70,7 @@ export const Dashboard = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-1">
-          <DashboardActions
-            clients={clients}
-            setClients={setClients}
-            cases={cases}
-            setCases={setCases}
-            audioFiles={audioFiles}
-            setAudioFiles={setAudioFiles}
-            onSaveDocumentation={handleSaveDocumentation}
-          />
+          <DashboardActions />
         </div>
         
         <div className="lg:col-span-1">
@@ -98,7 +82,7 @@ export const Dashboard = ({
         </div>
         
         <div className="lg:col-span-1">
-          <AudioFilesList documentations={documentations} audioFiles={audioFiles} setAudioFiles={setAudioFiles} />
+          <AudioFilesList />
         </div>
       </div>
     </div>
