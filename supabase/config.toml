@@ -1,1 +1,4 @@
 project_id = "ojovgionwaywaaddczwl"
+
+[functions.mock-transcribe]
+verify_jwt = false

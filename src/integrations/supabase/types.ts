@@ -14,7 +14,179 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      attachments: {
+        Row: {
+          created_at: string
+          documentation_id: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string
+          size: number
+        }
+        Insert: {
+          created_at?: string
+          documentation_id: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type: string
+          size: number
+        }
+        Update: {
+          created_at?: string
+          documentation_id?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string
+          size?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_documentation_id_fkey"
+            columns: ["documentation_id"]
+            isOneToOne: false
+            referencedRelation: "documentations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_files: {
+        Row: {
+          created_at: string
+          documentation_id: string
+          duration_ms: number | null
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string
+        }
+        Insert: {
+          created_at?: string
+          documentation_id: string
+          duration_ms?: number | null
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type: string
+        }
+        Update: {
+          created_at?: string
+          documentation_id?: string
+          duration_ms?: number | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_files_documentation_id_fkey"
+            columns: ["documentation_id"]
+            isOneToOne: false
+            referencedRelation: "documentations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          case_id: string
+          client_id: string
+          created_at: string
+          id: string
+          status: Database["public"]["Enums"]["case_status"]
+          title: string
+        }
+        Insert: {
+          case_id: string
+          client_id: string
+          created_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["case_status"]
+          title: string
+        }
+        Update: {
+          case_id?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          status?: Database["public"]["Enums"]["case_status"]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cases_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      documentations: {
+        Row: {
+          case_id: string
+          created_at: string
+          date: string
+          id: string
+          status: Database["public"]["Enums"]["documentation_status"]
+          summary_text: string | null
+          title: string
+          todos: string
+          transcript_text: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          date: string
+          id?: string
+          status?: Database["public"]["Enums"]["documentation_status"]
+          summary_text?: string | null
+          title: string
+          todos?: string
+          transcript_text?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          status?: Database["public"]["Enums"]["documentation_status"]
+          summary_text?: string | null
+          title?: string
+          todos?: string
+          transcript_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +195,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      case_status: "OPEN" | "CLOSED"
+      documentation_status: "OPEN" | "IN_REVIEW" | "DONE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +323,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      case_status: ["OPEN", "CLOSED"],
+      documentation_status: ["OPEN", "IN_REVIEW", "DONE"],
+    },
   },
 } as const
