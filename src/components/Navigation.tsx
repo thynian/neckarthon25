@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { NavLink } from "./NavLink";
-import { Settings } from "lucide-react";
+import { Settings, FileText } from "lucide-react";
+import { Link } from "react-router-dom";
 
 type TabType = "offen" | "mein-bereich" | "team-bereich";
 
@@ -21,9 +22,13 @@ export const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <h2 className="text-xl font-semibold text-foreground">
-              Dokumentations-App
-            </h2>
+            <Link 
+              to="/" 
+              className="flex items-center gap-2 text-xl font-semibold text-foreground hover:text-primary transition-colors"
+            >
+              <FileText className="h-6 w-6" />
+              <span>Dokumentations-App</span>
+            </Link>
             <div className="flex space-x-1">
               {tabs.map((tab) => (
                 <button
