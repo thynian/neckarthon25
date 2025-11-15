@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Plus, FileText, Mic, Upload, X, FileAudio, MessageSquare } from "lucide-react";
 import { Client, Case, Documentation, AudioFile, Attachment } from "@/types";
 import { generateCaseId, generateId } from "@/utils/idGenerator";
+import { useAudioFiles } from "@/hooks/useAudioFiles";
 
 const formSchema = z.object({
   clientId: z.string().min(1, "Client auswählen oder anlegen"),
@@ -65,8 +66,26 @@ export const NewDocumentationDialog = ({
   const [audioSummaries, setAudioSummaries] = useState<Map<string, string>>(new Map());
   const [attachments, setAttachments] = useState<Attachment[]>([]);
 
-  // Verwende nur die bereits aufgenommenen Audio-Dateien
-  const allAudioFiles = audioFiles;
+  // Lade alle gespeicherten Audio-Dateien aus der Datenbank
+  const { audioFiles: savedAudioFiles, isLoading: isLoadingAudio } = useAudioFiles();
+  
+  // Kombiniere neu aufgenommene und bereits gespeicherte Audio-Dateien
+  // Filter: Nur Audio-Dateien ohne documentation_id (noch nicht zugeordnet)
+  // Transformiere Datenbank-Format zu Frontend-Format
+  const savedAudioFormatted: AudioFile[] = (savedAudioFiles || [])
+    .filter(af => !af.documentation_id)
+    .map(af => ({
+      id: af.id,
+      fileName: af.file_name,
+      createdAt: af.created_at,
+      durationMs: af.duration_ms || 0,
+      blobUrl: af.file_path, // file_path wird als blobUrl verwendet
+      transcriptText: af.transcript_text || undefined,
+    }));
+  
+  const availableAudioFiles = [...audioFiles, ...savedAudioFormatted];
+  
+  const allAudioFiles = availableAudioFiles;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
