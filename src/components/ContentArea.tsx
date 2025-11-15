@@ -29,7 +29,8 @@ const contentMap: Record<TabType, { title: string; description: string }> = {
 export const ContentArea = ({ activeTab }: ContentAreaProps) => {
   const { clients, isLoading: clientsLoading } = useClients();
   const { cases, isLoading: casesLoading } = useCases();
-  const { documentations, isLoading: docsLoading } = useDocumentations();
+  const { documentations, setDocumentations, isLoading: docsLoading } = useDocumentations();
+  const { audioFiles, isLoading: audioLoading } = useAudioFiles();
   
   const content = contentMap[activeTab];
 
@@ -42,7 +43,7 @@ export const ContentArea = ({ activeTab }: ContentAreaProps) => {
     closedCases: cases.filter((c) => c.status === "CLOSED").length,
   };
 
-  const isLoading = clientsLoading || casesLoading || docsLoading;
+  const isLoading = clientsLoading || casesLoading || docsLoading || audioLoading;
 
   if (isLoading) {
     return (
@@ -61,7 +62,13 @@ export const ContentArea = ({ activeTab }: ContentAreaProps) => {
         {activeTab === "offen" ? (
           <Dashboard />
         ) : activeTab === "team-bereich" ? (
-          <TeamArea />
+          <TeamArea 
+            clients={clients}
+            cases={cases}
+            documentations={documentations}
+            setDocumentations={setDocumentations}
+            audioFiles={audioFiles}
+          />
         ) : (
           <div className="space-y-6">
             <div className="space-y-4">
