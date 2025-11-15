@@ -7,20 +7,18 @@ import { ExternalLink } from "lucide-react";
 interface OpenDocumentationsProps {
   documentations: Documentation[];
   cases: Case[];
+  onOpenDocumentation: (docId: string) => void;
 }
 
 export const OpenDocumentations = ({
   documentations,
   cases,
+  onOpenDocumentation,
 }: OpenDocumentationsProps) => {
   const openDocs = documentations.filter((doc) => doc.status === "OPEN");
 
   const getCaseById = (caseId: string) => {
     return cases.find((c) => c.id === caseId);
-  };
-
-  const handleOpenDocumentation = (docId: string) => {
-    console.log("Öffne Dokumentation:", docId);
   };
 
   return (
@@ -82,7 +80,7 @@ export const OpenDocumentations = ({
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleOpenDocumentation(doc.id)}
+                          onClick={() => onOpenDocumentation(doc.id)}
                         >
                           <ExternalLink className="h-4 w-4 mr-1" />
                           Öffnen
