@@ -16,14 +16,15 @@ export const DashboardActions = () => {
   
   const [showRecordingDialog, setShowRecordingDialog] = useState(false);
   const [showDocumentationDialog, setShowDocumentationDialog] = useState(false);
+  const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
 
   const handleStartRecording = () => {
     setShowRecordingDialog(true);
   };
 
   const handleSaveAudio = (audioFile: AudioFile) => {
-    // Audio files will be handled through documentation uploads
-    console.log("Audio-Datei wird über Dokumentation gespeichert");
+    setAudioFiles(prev => [...prev, audioFile]);
+    console.log("Audio-Datei gespeichert:", audioFile.fileName);
   };
 
   const handleNewDocumentation = () => {
@@ -82,7 +83,7 @@ export const DashboardActions = () => {
         setClients={() => {}}
         cases={cases}
         setCases={() => {}}
-        audioFiles={[]}
+        audioFiles={audioFiles}
         onSave={handleSaveDocumentation}
       />
     </>

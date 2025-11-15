@@ -97,6 +97,10 @@ export const NewDocumentationDialog = ({
     new Map()
   );
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploadedAudioFiles, setUploadedAudioFiles] = useState<AudioFile[]>([]);
+
+  // Kombiniere übergebene und hochgeladene Audio-Dateien
+  const allAudioFiles = [...audioFiles, ...uploadedAudioFiles];
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -197,6 +201,28 @@ export const NewDocumentationDialog = ({
     setAudioSummaries(newSummaries);
   };
 
+  const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newAudioFiles: AudioFile[] = Array.from(files).map((file) => {
+      const audio = new Audio();
+      const blobUrl = URL.createObjectURL(file);
+      audio.src = blobUrl;
+
+      return {
+        id: generateId("audio-"),
+        fileName: file.name,
+        createdAt: new Date().toISOString(),
+        durationMs: 0, // Will be updated when audio loads
+        blobUrl,
+      };
+    });
+
+    setUploadedAudioFiles((prev) => [...prev, ...newAudioFiles]);
+    toast.success(`${newAudioFiles.length} Audiodatei(en) hinzugefügt`);
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -224,7 +250,7 @@ export const NewDocumentationDialog = ({
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // Sammle ausgewählte AudioFiles
-    const selectedAudios = audioFiles.filter((audio) =>
+    const selectedAudios = allAudioFiles.filter((audio) =>
       selectedAudioIds.has(audio.id)
     );
 
@@ -271,6 +297,10 @@ export const NewDocumentationDialog = ({
     // Cleanup blob URLs
     attachments.forEach((att) => URL.revokeObjectURL(att.blobUrl));
     setAttachments([]);
+    
+    // Cleanup uploaded audio files
+    uploadedAudioFiles.forEach((audio) => URL.revokeObjectURL(audio.blobUrl));
+    setUploadedAudioFiles([]);
     
     onOpenChange(false);
   };
@@ -461,11 +491,22 @@ export const NewDocumentationDialog = ({
             />
 
             {/* Audio-Dateien */}
-            {audioFiles.length > 0 && (
-              <div className="space-y-3">
-                <Label>Audiodateien auswählen</Label>
+            <div className="space-y-3">
+              <Label>Audiodateien</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  multiple
+                  accept="audio/*,.webm,.mp3,.wav,.m4a"
+                  onChange={handleAudioUpload}
+                  className="cursor-pointer"
+                />
+                <FileAudio className="h-4 w-4 text-muted-foreground" />
+              </div>
+              
+              {allAudioFiles.length > 0 && (
                 <div className="space-y-2 max-h-60 overflow-y-auto rounded-lg border border-border p-3">
-                  {audioFiles.map((audio) => {
+                  {allAudioFiles.map((audio) => {
                     const isSelected = selectedAudioIds.has(audio.id);
                     return (
                       <div key={audio.id} className="space-y-2">
@@ -533,8 +574,8 @@ export const NewDocumentationDialog = ({
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Datei-Anhänge */}
             <div className="space-y-3">
