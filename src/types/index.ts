@@ -21,6 +21,7 @@ export type AudioFile = {
   createdAt: string;
   durationMs: number;
   blobUrl: string;
+  blob?: Blob; // Speichere das Blob für Upload
   transcriptText?: string;
 };
 

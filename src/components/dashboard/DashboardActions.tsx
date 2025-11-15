@@ -61,15 +61,20 @@ export const DashboardActions = () => {
 
       // 2. Lade Audio-Dateien hoch
       if (documentation.audioFiles && documentation.audioFiles.length > 0) {
+        console.log("Starte Audio-Upload für", documentation.audioFiles.length, "Dateien");
         for (const audio of documentation.audioFiles) {
           try {
-            // Hole das Blob von der URL
-            const response = await fetch(audio.blobUrl);
-            const blob = await response.blob();
+            // Verwende das gespeicherte Blob direkt
+            if (!audio.blob) {
+              console.error("Kein Blob verfügbar für Audio:", audio.fileName);
+              throw new Error(`Kein Blob verfügbar für ${audio.fileName}`);
+            }
             
             // Erstelle File-Objekt mit MP3 als Format
             const fileName = audio.fileName.replace(/\.[^/.]+$/, '') + '.mp3';
-            const file = new File([blob], fileName, { type: 'audio/mp3' });
+            const file = new File([audio.blob], fileName, { type: 'audio/mp3' });
+            
+            console.log("Uploade Audio-Datei:", fileName, "Größe:", file.size);
             
             // Lade in Storage hoch
             const storagePath = `${docData.id}/${Date.now()}.mp3`;

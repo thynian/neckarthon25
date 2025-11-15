@@ -72,6 +72,7 @@ export const RecordingDialog = ({
       createdAt: new Date().toISOString(),
       durationMs: recordingTime * 1000,
       blobUrl,
+      blob: audioBlob, // Speichere das Blob für späteren Upload
     };
 
     onSave(audioFile);
