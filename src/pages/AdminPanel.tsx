@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Users, ArrowLeft } from "lucide-react";
+import { Plus, Edit2, Trash2, Users, ArrowLeft, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,17 +21,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useClients } from "@/hooks/useClients";
+import { useCases } from "@/hooks/useCases";
+import { generateCaseId } from "@/utils/idGenerator";
 import { toast } from "sonner";
+import type { Case, CaseStatus } from "@/types";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const { clients, isLoading, createClient, updateClient } = useClients();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { clients, isLoading: clientsLoading, createClient, updateClient } = useClients();
+  const { cases, isLoading: casesLoading, createCase, updateCase } = useCases();
+  
+  // Client states
+  const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
+  const [isEditClientDialogOpen, setIsEditClientDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<{ id: string; name: string } | null>(null);
   const [newClientName, setNewClientName] = useState("");
+  
+  // Case states
+  const [isCreateCaseDialogOpen, setIsCreateCaseDialogOpen] = useState(false);
+  const [isEditCaseDialogOpen, setIsEditCaseDialogOpen] = useState(false);
+  const [editingCase, setEditingCase] = useState<Case | null>(null);
+  const [newCaseData, setNewCaseData] = useState({ clientId: "", title: "" });
 
+  // Client handlers
   const handleCreateClient = async () => {
     if (!newClientName.trim()) {
       toast.error("Bitte geben Sie einen Namen ein");
@@ -41,7 +68,7 @@ export default function AdminPanel() {
     try {
       await createClient(newClientName.trim());
       setNewClientName("");
-      setIsCreateDialogOpen(false);
+      setIsCreateClientDialogOpen(false);
     } catch (error) {
       console.error("Fehler beim Erstellen:", error);
     }
@@ -56,16 +83,65 @@ export default function AdminPanel() {
     try {
       await updateClient({ id: editingClient.id, name: editingClient.name.trim() });
       setEditingClient(null);
-      setIsEditDialogOpen(false);
+      setIsEditClientDialogOpen(false);
     } catch (error) {
       console.error("Fehler beim Aktualisieren:", error);
     }
   };
 
-  const openEditDialog = (client: { id: string; name: string; createdAt: string }) => {
+  const openEditClientDialog = (client: { id: string; name: string; createdAt: string }) => {
     setEditingClient({ id: client.id, name: client.name });
-    setIsEditDialogOpen(true);
+    setIsEditClientDialogOpen(true);
   };
+
+  // Case handlers
+  const handleCreateCase = async () => {
+    if (!newCaseData.clientId || !newCaseData.title.trim()) {
+      toast.error("Bitte füllen Sie alle Felder aus");
+      return;
+    }
+
+    try {
+      const caseId = generateCaseId(cases);
+      await createCase({
+        client_id: newCaseData.clientId,
+        case_id: caseId,
+        title: newCaseData.title.trim(),
+      });
+      setNewCaseData({ clientId: "", title: "" });
+      setIsCreateCaseDialogOpen(false);
+    } catch (error) {
+      console.error("Fehler beim Erstellen:", error);
+    }
+  };
+
+  const handleEditCase = async () => {
+    if (!editingCase || !editingCase.title.trim()) {
+      toast.error("Bitte geben Sie einen Titel ein");
+      return;
+    }
+
+    try {
+      await updateCase({ 
+        id: editingCase.id, 
+        updates: { 
+          title: editingCase.title.trim(),
+          status: editingCase.status,
+        } 
+      });
+      setEditingCase(null);
+      setIsEditCaseDialogOpen(false);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren:", error);
+    }
+  };
+
+  const openEditCaseDialog = (caseItem: Case) => {
+    setEditingCase(caseItem);
+    setIsEditCaseDialogOpen(true);
+  };
+
+  const isLoading = clientsLoading || casesLoading;
 
   if (isLoading) {
     return (
@@ -157,7 +233,7 @@ export default function AdminPanel() {
                   Übersicht aller Mandanten im System
                 </CardDescription>
               </div>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Button onClick={() => setIsCreateClientDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Neuer Mandant
               </Button>
@@ -173,7 +249,7 @@ export default function AdminPanel() {
                 <p className="text-sm text-muted-foreground mb-6">
                   Erstellen Sie Ihren ersten Mandanten, um zu beginnen
                 </p>
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Button onClick={() => setIsCreateClientDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Ersten Mandanten anlegen
                 </Button>
@@ -205,7 +281,7 @@ export default function AdminPanel() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => openEditDialog(client)}
+                            onClick={() => openEditClientDialog(client)}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -220,7 +296,7 @@ export default function AdminPanel() {
         </Card>
 
         {/* Create Dialog */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Neuen Mandanten anlegen</DialogTitle>
@@ -245,7 +321,7 @@ export default function AdminPanel() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsCreateClientDialogOpen(false)}>
                 Abbrechen
               </Button>
               <Button onClick={handleCreateClient}>Anlegen</Button>
@@ -254,7 +330,7 @@ export default function AdminPanel() {
         </Dialog>
 
         {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditClientDialogOpen} onOpenChange={setIsEditClientDialogOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Mandant bearbeiten</DialogTitle>
@@ -286,7 +362,7 @@ export default function AdminPanel() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setIsEditDialogOpen(false);
+                  setIsEditClientDialogOpen(false);
                   setEditingClient(null);
                 }}
               >
