@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const AudioFilesList = () => {
   const { audioFiles, isLoading } = useAudioFiles();
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   
   // Generate public URLs for audio files
   const audioFilesWithUrls = audioFiles.map((audio) => {
@@ -31,21 +32,25 @@ export const AudioFilesList = () => {
     return `${minutes}:${seconds.toString().padStart(2, "0")} min`;
   };
 
-  const handlePlayAudio = (audioId: string, blobUrl: string) => {
+  const handlePlayAudio = (audioId: string) => {
+    const audioElement = audioRefs.current.get(audioId);
+    if (!audioElement) return;
+
     if (playingAudioId === audioId) {
-      // Stop playing
+      // Pause the current audio
+      audioElement.pause();
       setPlayingAudioId(null);
     } else {
-      // Start playing
+      // Pause any currently playing audio
+      audioRefs.current.forEach((audio, id) => {
+        if (id !== audioId) {
+          audio.pause();
+        }
+      });
+      
+      // Play the selected audio
+      audioElement.play();
       setPlayingAudioId(audioId);
-      
-      // Create audio element and play
-      const audio = new Audio(blobUrl);
-      audio.play();
-      
-      audio.onended = () => {
-        setPlayingAudioId(null);
-      };
     }
   };
 
@@ -97,13 +102,25 @@ export const AudioFilesList = () => {
                   })}
                 </div>
                 <div className="mt-1">
-                  <audio controls src={audio.blobUrl} className="w-full h-8" />
+                  <audio 
+                    ref={(el) => {
+                      if (el) {
+                        audioRefs.current.set(audio.id, el);
+                      }
+                    }}
+                    controls 
+                    src={audio.blobUrl} 
+                    className="w-full h-8"
+                    onPlay={() => setPlayingAudioId(audio.id)}
+                    onPause={() => setPlayingAudioId(null)}
+                    onEnded={() => setPlayingAudioId(null)}
+                  />
                 </div>
                 <div className="mt-1 flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handlePlayAudio(audio.id, audio.blobUrl)}
+                    onClick={() => handlePlayAudio(audio.id)}
                     className="h-7 px-2 text-xs"
                   >
                     {playingAudioId === audio.id ? (
