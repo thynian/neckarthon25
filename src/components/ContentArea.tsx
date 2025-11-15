@@ -1,19 +1,13 @@
-import { Client, Case, Documentation, AudioFile } from "@/types";
 import { Dashboard } from "./dashboard/Dashboard";
 import { TeamArea } from "./team/TeamArea";
+import { useClients } from "@/hooks/useClients";
+import { useCases } from "@/hooks/useCases";
+import { useDocumentations } from "@/hooks/useDocumentations";
 
 type TabType = "offen" | "mein-bereich" | "team-bereich";
 
 interface ContentAreaProps {
   activeTab: TabType;
-  clients: Client[];
-  setClients: React.Dispatch<React.SetStateAction<Client[]>>;
-  cases: Case[];
-  setCases: React.Dispatch<React.SetStateAction<Case[]>>;
-  documentations: Documentation[];
-  setDocumentations: React.Dispatch<React.SetStateAction<Documentation[]>>;
-  audioFiles: AudioFile[];
-  setAudioFiles: React.Dispatch<React.SetStateAction<AudioFile[]>>;
 }
 
 const contentMap: Record<TabType, { title: string; description: string }> = {
@@ -31,17 +25,11 @@ const contentMap: Record<TabType, { title: string; description: string }> = {
   },
 };
 
-export const ContentArea = ({
-  activeTab,
-  clients,
-  setClients,
-  cases,
-  setCases,
-  documentations,
-  setDocumentations,
-  audioFiles,
-  setAudioFiles,
-}: ContentAreaProps) => {
+export const ContentArea = ({ activeTab }: ContentAreaProps) => {
+  const { clients, isLoading: clientsLoading } = useClients();
+  const { cases, isLoading: casesLoading } = useCases();
+  const { documentations, isLoading: docsLoading } = useDocumentations();
+  
   const content = contentMap[activeTab];
 
   // Debug-Ausgabe der geladenen Daten
@@ -53,28 +41,26 @@ export const ContentArea = ({
     closedCases: cases.filter((c) => c.status === "CLOSED").length,
   };
 
+  const isLoading = clientsLoading || casesLoading || docsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-content-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          <p className="mt-4 text-muted-foreground">Lade Daten...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-content-background">
       <div className="mx-auto max-w-7xl px-6 py-12">
         {activeTab === "offen" ? (
-          <Dashboard
-            clients={clients}
-            setClients={setClients}
-            cases={cases}
-            setCases={setCases}
-            documentations={documentations}
-            setDocumentations={setDocumentations}
-            audioFiles={audioFiles}
-            setAudioFiles={setAudioFiles}
-          />
+          <Dashboard />
         ) : activeTab === "team-bereich" ? (
-          <TeamArea
-            clients={clients}
-            cases={cases}
-            documentations={documentations}
-            setDocumentations={setDocumentations}
-            audioFiles={audioFiles}
-          />
+          <TeamArea />
         ) : (
           <div className="space-y-6">
             <div className="space-y-4">
@@ -112,42 +98,20 @@ export const ContentArea = ({
                     {dataStats.documentations}
                   </p>
                 </div>
-                <div className="rounded-md bg-accent p-4">
+                <div className="rounded-md bg-secondary p-4">
                   <p className="text-sm text-muted-foreground">Offene Fälle</p>
-                  <p className="mt-1 text-2xl font-bold text-primary">
+                  <p className="mt-1 text-2xl font-bold text-foreground">
                     {dataStats.openCases}
                   </p>
                 </div>
-                <div className="rounded-md bg-accent p-4">
+                <div className="rounded-md bg-secondary p-4">
                   <p className="text-sm text-muted-foreground">
                     Geschlossene Fälle
                   </p>
-                  <p className="mt-1 text-2xl font-bold text-muted-foreground">
+                  <p className="mt-1 text-2xl font-bold text-foreground">
                     {dataStats.closedCases}
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Beispiel-Datenliste */}
-            <div className="mt-8 rounded-lg border border-border bg-card p-6">
-              <h2 className="mb-4 text-xl font-semibold text-card-foreground">
-                Beispiel-Clients
-              </h2>
-              <div className="space-y-2">
-                {clients.map((client) => (
-                  <div
-                    key={client.id}
-                    className="flex items-center justify-between rounded-md bg-secondary p-3"
-                  >
-                    <span className="font-medium text-foreground">
-                      {client.name}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(client.createdAt).toLocaleDateString("de-DE")}
-                    </span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
