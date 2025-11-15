@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Play, Pause, Trash2, Plus, FileText, Download } from "lucide-react";
+import { ArrowLeft, Play, Pause, Trash2, Plus, FileText, Download, X, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { generateId } from "@/utils/idGenerator";
 import { DocumentationStatusBadge } from "./DocumentationStatusBadge";
@@ -33,6 +33,10 @@ export const DocumentationDetail = ({
   const [editedDoc, setEditedDoc] = useState<Documentation>(documentation);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [isAddAudioOpen, setIsAddAudioOpen] = useState(false);
+  const [isCuratingTopics, setIsCuratingTopics] = useState(false);
+  const [curatedTopics, setCuratedTopics] = useState<string[]>([]);
+  const [editingTopicIndex, setEditingTopicIndex] = useState<number | null>(null);
+  const [editingTopicText, setEditingTopicText] = useState("");
   const currentCase = cases.find(c => c.id === editedDoc.caseId);
   const currentClient = clients.find(cl => cl.id === currentCase?.clientId);
   const availableCases = cases.filter(c => c.clientId === currentClient?.id);
@@ -87,13 +91,59 @@ export const DocumentationDetail = ({
     });
     toast.success("Protokollion erstellt (Mock)");
   };
-  const handleSummarize = () => {
-    const newSummary = "Dies ist eine Beispiel-Zusammenfassung (Mock). In der echten Implementierung würde hier eine KI-generierte Zusammenfassung erscheinen.";
+  const handleStartCuration = () => {
+    const dummyTopics = [
+      "Dummy-Thema 1: Budget",
+      "Dummy-Thema 2: Zeitplan",
+      "Dummy-Thema 3: Offene Punkte",
+      "Dummy-Thema 4: Nächste Schritte",
+      "Dummy-Thema 5: Personalmangel"
+    ];
+    setCuratedTopics(dummyTopics);
+    setIsCuratingTopics(true);
+    toast.success("Kurationg-Workflow gestartet");
+  };
+
+  const handleAddTopic = () => {
+    setCuratedTopics([...curatedTopics, "Neues Thema"]);
+    toast.success("Thema hinzugefügt");
+  };
+
+  const handleDeleteTopic = (index: number) => {
+    setCuratedTopics(curatedTopics.filter((_, i) => i !== index));
+    toast.success("Thema entfernt");
+  };
+
+  const handleStartEditTopic = (index: number) => {
+    setEditingTopicIndex(index);
+    setEditingTopicText(curatedTopics[index]);
+  };
+
+  const handleSaveEditTopic = () => {
+    if (editingTopicIndex !== null) {
+      const updatedTopics = [...curatedTopics];
+      updatedTopics[editingTopicIndex] = editingTopicText;
+      setCuratedTopics(updatedTopics);
+      setEditingTopicIndex(null);
+      setEditingTopicText("");
+      toast.success("Thema aktualisiert");
+    }
+  };
+
+  const handleCancelEditTopic = () => {
+    setEditingTopicIndex(null);
+    setEditingTopicText("");
+  };
+
+  const handleFinalizeSummary = () => {
+    const summaryText = curatedTopics.join("\n\n");
     setEditedDoc({
       ...editedDoc,
-      summaryText: editedDoc.summaryText ? `${editedDoc.summaryText}\n\n---\n\n${newSummary}` : newSummary
+      summaryText
     });
-    toast.success("Zusammenfassung erstellt (Mock)");
+    setIsCuratingTopics(false);
+    setCuratedTopics([]);
+    toast.success("Zusammenfassung erstellt und übernommen");
   };
   const handleRemoveAttachment = (attachmentId: string) => {
     setEditedDoc({
@@ -277,8 +327,8 @@ export const DocumentationDetail = ({
                   </div>
                 </DialogContent>
               </Dialog>
-              <Button size="sm" variant="outline" onClick={handleSummarize}>
-                Zusammenfassen (Mock)
+              <Button size="sm" variant="outline" onClick={handleStartCuration}>
+                Zusammenfassung starten
               </Button>
             </div>
           </div>
@@ -307,15 +357,74 @@ export const DocumentationDetail = ({
                     <Label htmlFor={`transcript-${audioFile.id}`}>Protokoll</Label>
                     <Textarea id={`transcript-${audioFile.id}`} value={audioFile.transcriptText} onChange={e => handleUpdateTranscript(audioFile.id, e.target.value)} rows={8} className="font-mono text-sm" />
                   </div>}
-              </div>)}
+                  </div>)}
 
-          {editedDoc.summaryText && <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
+          {isCuratingTopics && (
+            <div className="mt-4 p-4 border border-border rounded-md space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Themen kuratieren</Label>
+                <Button size="sm" onClick={handleAddTopic}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Thema hinzufügen
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                {curatedTopics.map((topic, index) => (
+                  <div key={index} className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                    {editingTopicIndex === index ? (
+                      <>
+                        <Input
+                          value={editingTopicText}
+                          onChange={(e) => setEditingTopicText(e.target.value)}
+                          className="flex-1"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={handleSaveEditTopic}>
+                          Speichern
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={handleCancelEditTopic}>
+                          Abbrechen
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex-1 text-sm">{topic}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleStartEditTopic(index)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteTopic(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <Button onClick={handleFinalizeSummary} className="w-full">
+                Zusammenfassung erstellen & übernehmen
+              </Button>
+            </div>
+          )}
+
+          {editedDoc.summaryText && !isCuratingTopics && (
+            <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
               <Label htmlFor="summary">Zusammenfassung (über alle Audiodateien)</Label>
               <Textarea id="summary" value={editedDoc.summaryText} onChange={e => setEditedDoc({
             ...editedDoc,
             summaryText: e.target.value
           })} rows={6} className="text-sm" />
-            </div>}
+            </div>
+          )}
         </CardContent>
       </Card>
 
