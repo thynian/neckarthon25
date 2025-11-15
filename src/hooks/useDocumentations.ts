@@ -109,15 +109,26 @@ export const useDocumentations = (caseId?: string) => {
       
       if (error) throw error;
 
-      // Update audio files transcripts if provided
+      // Update audio files - set documentation_id and transcripts
       if (audioFiles && audioFiles.length > 0) {
+        // First, clear all previous audio files for this documentation
+        await supabase
+          .from("audio_files")
+          .update({ documentation_id: null })
+          .eq("documentation_id", id);
+
+        // Then set the new audio files
         for (const audioFile of audioFiles) {
+          const updateData: any = { documentation_id: id };
+          
           if (audioFile.transcriptText !== undefined) {
-            await supabase
-              .from("audio_files")
-              .update({ transcript_text: audioFile.transcriptText })
-              .eq("id", audioFile.id);
+            updateData.transcript_text = audioFile.transcriptText;
           }
+          
+          await supabase
+            .from("audio_files")
+            .update(updateData)
+            .eq("id", audioFile.id);
         }
       }
       
@@ -134,6 +145,13 @@ export const useDocumentations = (caseId?: string) => {
 
   const deleteDocumentation = useMutation({
     mutationFn: async (id: string) => {
+      // First, release all audio files from this documentation
+      await supabase
+        .from("audio_files")
+        .update({ documentation_id: null })
+        .eq("documentation_id", id);
+
+      // Then delete the documentation
       const { error } = await supabase
         .from("documentations")
         .delete()
