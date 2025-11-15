@@ -2,3 +2,6 @@ project_id = "ojovgionwaywaaddczwl"
 
 [functions.mock-transcribe]
 verify_jwt = false
+
+[functions.generate-summary]
+verify_jwt = false

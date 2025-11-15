@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { generateId } from "@/utils/idGenerator";
 import { DocumentationStatusBadge } from "./DocumentationStatusBadge";
 import { useAudioFiles } from "@/hooks/useAudioFiles";
+import { supabase } from "@/integrations/supabase/client";
 interface DocumentationDetailProps {
   documentation: Documentation;
   clients: Client[];
@@ -155,9 +156,36 @@ export const DocumentationDetail = ({
     setEditingTopicText("");
   };
 
-  const handleFinalizeSummary = () => {
-    setIsCuratingTopics(false);
-    toast.success("Themenliste gespeichert");
+  const handleFinalizeSummary = async () => {
+    try {
+      toast.loading("Generiere Zusammenfassung...", { id: "summary-generation" });
+      
+      const { data, error } = await supabase.functions.invoke('generate-summary', {
+        body: { topics: curatedTopics }
+      });
+
+      if (error) {
+        console.error("Error generating summary:", error);
+        toast.error("Fehler beim Generieren der Zusammenfassung", { id: "summary-generation" });
+        return;
+      }
+
+      if (!data?.summary) {
+        toast.error("Keine Zusammenfassung erhalten", { id: "summary-generation" });
+        return;
+      }
+
+      setEditedDoc({
+        ...editedDoc,
+        summaryText: data.summary
+      });
+      
+      setIsCuratingTopics(false);
+      toast.success("Zusammenfassung erfolgreich erstellt", { id: "summary-generation" });
+    } catch (error) {
+      console.error("Error in handleFinalizeSummary:", error);
+      toast.error("Fehler beim Generieren der Zusammenfassung", { id: "summary-generation" });
+    }
   };
   const handleRemoveAttachment = (attachmentId: string) => {
     setEditedDoc({
@@ -214,18 +242,10 @@ export const DocumentationDetail = ({
     }
   };
   const handleSave = () => {
-    // Teil 1: Themenliste speichern
     const updatedDoc = {
       ...editedDoc,
       curatedTopics: curatedTopics.length > 0 ? curatedTopics : editedDoc.curatedTopics,
     };
-    
-    // Teil 2: Mock-Fließtext generieren wenn Themen vorhanden
-    if (curatedTopics.length > 0) {
-      const mockSummaryText = "Dies ist der finale, hartcodierte Endbericht, der auf den kuratierten Themen basiert:\n\n" + 
-        curatedTopics.map((topic, idx) => `${idx + 1}. ${topic}`).join("\n");
-      updatedDoc.summaryText = mockSummaryText;
-    }
     
     onSave(updatedDoc);
     setEditedDoc(updatedDoc);
