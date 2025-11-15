@@ -16,6 +16,8 @@ export const AudioFilesList = () => {
       .from("audio-files")
       .getPublicUrl(audio.file_path);
     
+    console.log('Audio file:', audio.file_name, 'URL:', data.publicUrl);
+    
     return {
       id: audio.id,
       fileName: audio.file_name,
