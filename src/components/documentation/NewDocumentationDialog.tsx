@@ -229,18 +229,22 @@ export const NewDocumentationDialog = ({
     );
 
     // Erstelle kombinierte Transkripte und Zusammenfassungen
-    const allTranscripts = Array.from(audioTranscripts.values()).join("\n\n");
     const allSummaries = Array.from(audioSummaries.values()).join("\n\n");
+
+    // Füge Transkripte zu den jeweiligen AudioFiles hinzu
+    const audioFilesWithTranscripts = selectedAudios.map((audio) => ({
+      ...audio,
+      transcriptText: audioTranscripts.get(audio.id),
+    }));
 
     const newDocumentation: Documentation = {
       id: generateId("doc-"),
       caseId: values.caseId,
       title: values.title,
       date: values.date,
-      audioFiles: selectedAudios,
+      audioFiles: audioFilesWithTranscripts,
       attachments: attachments,
       todos: values.todos || "",
-      transcriptText: allTranscripts || undefined,
       summaryText: allSummaries || undefined,
       status: "OPEN",
       createdAt: new Date().toISOString(),

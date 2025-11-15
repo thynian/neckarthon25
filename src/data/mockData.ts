@@ -66,6 +66,7 @@ export const mockDocumentations: Documentation[] = [
         createdAt: "2025-01-15T10:05:00Z",
         durationMs: 3600000, // 1 Stunde
         blobUrl: "blob:mock-audio-1",
+        transcriptText: "Besprechung der Anforderungen für Projekt A. Der Kunde wünscht eine Lösung bis Ende März...",
       },
     ],
     attachments: [
@@ -78,8 +79,6 @@ export const mockDocumentations: Documentation[] = [
       },
     ],
     todos: "- Budget prüfen\n- Zeitplan erstellen\n- Team zusammenstellen",
-    transcriptText:
-      "Besprechung der Anforderungen für Projekt A. Der Kunde wünscht eine Lösung bis Ende März...",
     summaryText:
       "Initiales Meeting zur Erfassung der Projektanforderungen. Budget und Timeline wurden besprochen.",
     status: "VERIFIED",
@@ -116,6 +115,7 @@ export const mockDocumentations: Documentation[] = [
         createdAt: "2025-02-08T09:10:00Z",
         durationMs: 5400000, // 1.5 Stunden
         blobUrl: "blob:mock-audio-3",
+        transcriptText: "Diskussion über die strategische Ausrichtung für Q1 2025. Fokusthemen: Marktexpansion, Produktentwicklung...",
       },
     ],
     attachments: [
@@ -138,11 +138,9 @@ export const mockDocumentations: Documentation[] = [
     ],
     todos:
       "- Marktanalyse finalisieren\n- Stakeholder informieren\n- Roadmap erstellen",
-    transcriptText:
-      "Diskussion der strategischen Ausrichtung für 2025. Fokus auf Digitalisierung und Nachhaltigkeit...",
     summaryText:
-      "Strategische Planung für das Jahr 2025 mit Schwerpunkt auf digitale Transformation.",
-    status: "OPEN",
+      "Strategisches Planning Meeting für Q1. Prioritäten wurden definiert und Verantwortlichkeiten verteilt.",
+    status: "IN_REVIEW",
     createdAt: "2025-02-08T09:00:00Z",
   },
   {

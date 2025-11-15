@@ -21,6 +21,7 @@ export type AudioFile = {
   createdAt: string;
   durationMs: number;
   blobUrl: string;
+  transcriptText?: string;
 };
 
 export type Attachment = {
@@ -41,7 +42,6 @@ export type Documentation = {
   audioFiles: AudioFile[];
   attachments: Attachment[];
   todos: string; // Freitext, ein ToDo pro Zeile
-  transcriptText?: string;
   summaryText?: string;
   status: DocumentationStatus;
   createdAt: string;

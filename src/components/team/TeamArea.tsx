@@ -437,14 +437,23 @@ export const TeamArea = ({ clients, cases, documentations, setDocumentations, au
               </div>
             )}
 
-            {/* Transcript */}
-            {selectedDocumentation.transcriptText && (
+            {/* Transcripts */}
+            {selectedDocumentation.audioFiles.some(af => af.transcriptText) && (
               <div>
-                <h4 className="font-medium text-sm sm:text-base mb-2">Transkript</h4>
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm whitespace-pre-wrap">
-                    {selectedDocumentation.transcriptText}
-                  </p>
+                <h4 className="font-medium text-sm sm:text-base mb-2">Transkripte</h4>
+                <div className="space-y-3">
+                  {selectedDocumentation.audioFiles.map((audioFile) =>
+                    audioFile.transcriptText ? (
+                      <div key={audioFile.id} className="p-3 bg-muted rounded-lg">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          {audioFile.fileName}
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {audioFile.transcriptText}
+                        </p>
+                      </div>
+                    ) : null
+                  )}
                 </div>
               </div>
             )}

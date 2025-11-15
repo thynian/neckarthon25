@@ -77,6 +77,15 @@ export const DocumentationDetail = ({
     toast.success("Audiodatei entfernt");
   };
 
+  const handleUpdateTranscript = (audioId: string, newTranscript: string) => {
+    setEditedDoc({
+      ...editedDoc,
+      audioFiles: editedDoc.audioFiles.map((af) =>
+        af.id === audioId ? { ...af, transcriptText: newTranscript } : af
+      ),
+    });
+  };
+
   const handleAddAudio = (audioFile: AudioFile) => {
     setEditedDoc({
       ...editedDoc,
@@ -86,13 +95,21 @@ export const DocumentationDetail = ({
     toast.success("Audiodatei hinzugefügt");
   };
 
-  const handleTranscribe = () => {
+  const handleTranscribe = (audioId: string) => {
     const newTranscript = "Dies ist ein Beispiel-Transkript (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.";
+    
     setEditedDoc({
       ...editedDoc,
-      transcriptText: editedDoc.transcriptText 
-        ? `${editedDoc.transcriptText}\n\n---\n\n${newTranscript}`
-        : newTranscript,
+      audioFiles: editedDoc.audioFiles.map((af) =>
+        af.id === audioId
+          ? {
+              ...af,
+              transcriptText: af.transcriptText
+                ? `${af.transcriptText}\n\n---\n\n${newTranscript}`
+                : newTranscript,
+            }
+          : af
+      ),
       status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
     });
     toast.success("Transkription erstellt (Mock)");
@@ -316,9 +333,6 @@ export const DocumentationDetail = ({
                   </div>
                 </DialogContent>
               </Dialog>
-              <Button size="sm" variant="outline" onClick={handleTranscribe}>
-                Transkribieren (Mock)
-              </Button>
               <Button size="sm" variant="outline" onClick={handleSummarize}>
                 Zusammenfassen (Mock)
               </Button>
@@ -332,60 +346,69 @@ export const DocumentationDetail = ({
             </p>
           ) : (
             editedDoc.audioFiles.map((audioFile) => (
-              <div key={audioFile.id} className="flex items-center gap-4 p-4 border border-border rounded-md">
-                <div className="flex-1">
-                  <p className="font-medium">{audioFile.fileName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Dauer: {formatDuration(audioFile.durationMs)}
-                  </p>
-                  <audio
-                    id={`audio-${audioFile.id}`}
-                    src={audioFile.blobUrl}
-                    onEnded={() => setPlayingAudioId(null)}
-                    className="hidden"
-                  />
+              <div key={audioFile.id} className="space-y-3 p-4 border border-border rounded-md">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <p className="font-medium">{audioFile.fileName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Dauer: {formatDuration(audioFile.durationMs)}
+                    </p>
+                    <audio
+                      id={`audio-${audioFile.id}`}
+                      src={audioFile.blobUrl}
+                      onEnded={() => setPlayingAudioId(null)}
+                      className="hidden"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handlePlayAudio(audioFile.id, audioFile.blobUrl)}
+                    >
+                      {playingAudioId === audioFile.id ? (
+                        <Pause className="h-4 w-4 mr-1" />
+                      ) : (
+                        <Play className="h-4 w-4 mr-1" />
+                      )}
+                      {playingAudioId === audioFile.id ? "Stop" : "Abspielen"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTranscribe(audioFile.id)}
+                    >
+                      Transkribieren (Mock)
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleRemoveAudio(audioFile.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handlePlayAudio(audioFile.id, audioFile.blobUrl)}
-                  >
-                    {playingAudioId === audioFile.id ? (
-                      <Pause className="h-4 w-4 mr-1" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-1" />
-                    )}
-                    {playingAudioId === audioFile.id ? "Stop" : "Abspielen"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleRemoveAudio(audioFile.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+
+                {audioFile.transcriptText && (
+                  <div className="mt-3 space-y-2">
+                    <Label htmlFor={`transcript-${audioFile.id}`}>Transkript</Label>
+                    <Textarea
+                      id={`transcript-${audioFile.id}`}
+                      value={audioFile.transcriptText}
+                      onChange={(e) => handleUpdateTranscript(audioFile.id, e.target.value)}
+                      rows={8}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+                )}
               </div>
             ))
           )}
 
-          {editedDoc.transcriptText && (
-            <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
-              <Label htmlFor="transcript">Transkript</Label>
-              <Textarea
-                id="transcript"
-                value={editedDoc.transcriptText}
-                onChange={(e) => setEditedDoc({ ...editedDoc, transcriptText: e.target.value })}
-                rows={8}
-                className="font-mono text-sm"
-              />
-            </div>
-          )}
-
           {editedDoc.summaryText && (
             <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
-              <Label htmlFor="summary">Zusammenfassung</Label>
+              <Label htmlFor="summary">Zusammenfassung (über alle Audiodateien)</Label>
               <Textarea
                 id="summary"
                 value={editedDoc.summaryText}
