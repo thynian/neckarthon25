@@ -34,8 +34,11 @@ export const DashboardActions = () => {
   };
 
   const handleSaveDocumentation = async (documentation: any) => {
+    console.log("handleSaveDocumentation aufgerufen mit:", documentation);
+    
     try {
       // 1. Erstelle die Dokumentation
+      console.log("Erstelle Dokumentation...");
       const { data: docData, error: docError } = await supabase
         .from("documentations")
         .insert({
@@ -49,7 +52,10 @@ export const DashboardActions = () => {
         .select()
         .single();
 
-      if (docError) throw docError;
+      if (docError) {
+        console.error("Fehler beim Erstellen der Dokumentation:", docError);
+        throw docError;
+      }
 
       console.log("Dokumentation erstellt:", docData.id);
 
@@ -144,8 +150,9 @@ export const DashboardActions = () => {
       toast.success("Dokumentation mit allen Dateien gespeichert");
       setShowDocumentationDialog(false);
     } catch (error) {
-      console.error("Fehler beim Speichern:", error);
-      toast.error("Fehler beim Speichern der Dokumentation");
+      console.error("Detaillierter Fehler beim Speichern:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+      toast.error(`Fehler beim Speichern: ${errorMessage}`);
     }
   };
 

@@ -67,7 +67,7 @@ interface NewDocumentationDialogProps {
   cases: Case[];
   setCases: React.Dispatch<React.SetStateAction<Case[]>>;
   audioFiles: AudioFile[];
-  onSave: (documentation: Documentation) => void;
+  onSave: (documentation: Documentation) => Promise<void>;
 }
 
 export const NewDocumentationDialog = ({
@@ -248,37 +248,42 @@ export const NewDocumentationDialog = ({
     });
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Sammle ausgewählte AudioFiles
-    const selectedAudios = allAudioFiles.filter((audio) =>
-      selectedAudioIds.has(audio.id)
-    );
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      // Sammle ausgewählte AudioFiles
+      const selectedAudios = allAudioFiles.filter((audio) =>
+        selectedAudioIds.has(audio.id)
+      );
 
-    // Erstelle kombinierte Transkripte und Zusammenfassungen
-    const allSummaries = Array.from(audioSummaries.values()).join("\n\n");
+      // Erstelle kombinierte Transkripte und Zusammenfassungen
+      const allSummaries = Array.from(audioSummaries.values()).join("\n\n");
 
-    // Füge Transkripte zu den jeweiligen AudioFiles hinzu
-    const audioFilesWithTranscripts = selectedAudios.map((audio) => ({
-      ...audio,
-      transcriptText: audioTranscripts.get(audio.id),
-    }));
+      // Füge Transkripte zu den jeweiligen AudioFiles hinzu
+      const audioFilesWithTranscripts = selectedAudios.map((audio) => ({
+        ...audio,
+        transcriptText: audioTranscripts.get(audio.id),
+      }));
 
-    const newDocumentation: Documentation = {
-      id: generateId("doc-"),
-      caseId: values.caseId,
-      title: values.title,
-      date: values.date,
-      audioFiles: audioFilesWithTranscripts,
-      attachments: attachments,
-      todos: values.todos || "",
-      summaryText: allSummaries || undefined,
-      status: "OPEN",
-      createdAt: new Date().toISOString(),
-    };
+      const newDocumentation: Documentation = {
+        id: generateId("doc-"),
+        caseId: values.caseId,
+        title: values.title,
+        date: values.date,
+        audioFiles: audioFilesWithTranscripts,
+        attachments: attachments,
+        todos: values.todos || "",
+        summaryText: allSummaries || undefined,
+        status: "OPEN",
+        createdAt: new Date().toISOString(),
+      };
 
-    onSave(newDocumentation);
-    toast.success(`Dokumentation "${values.title}" wurde erstellt`);
-    handleClose();
+      // Warte auf das asynchrone Speichern
+      await onSave(newDocumentation);
+      handleClose();
+    } catch (error) {
+      console.error("Fehler beim Speichern:", error);
+      // Error wird bereits in handleSaveDocumentation behandelt
+    }
   };
 
   const handleClose = () => {
