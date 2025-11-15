@@ -3,14 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -24,15 +17,13 @@ import { Plus, FileText, Mic, Upload, X, FileAudio, MessageSquare } from "lucide
 import { Client, Case, Documentation, AudioFile, Attachment } from "@/types";
 import { generateCaseId, generateId } from "@/utils/idGenerator";
 import { useAudioFiles } from "@/hooks/useAudioFiles";
-
 const formSchema = z.object({
   clientId: z.string().min(1, "Client auswählen oder anlegen"),
   caseId: z.string().min(1, "Fall auswählen oder anlegen"),
   title: z.string().min(1, "Titel ist erforderlich").max(200),
   date: z.string().min(1, "Termin ist erforderlich"),
-  todos: z.string().optional(),
+  todos: z.string().optional()
 });
-
 interface NewDocumentationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -43,7 +34,6 @@ interface NewDocumentationDialogProps {
   audioFiles: AudioFile[];
   onSave: (documentation: Documentation) => Promise<void>;
 }
-
 export const NewDocumentationDialog = ({
   open,
   onOpenChange,
@@ -52,7 +42,7 @@ export const NewDocumentationDialog = ({
   cases,
   setCases,
   audioFiles,
-  onSave,
+  onSave
 }: NewDocumentationDialogProps) => {
   const [newClientName, setNewClientName] = useState("");
   const [newCaseTitle, setNewCaseTitle] = useState("");
@@ -67,26 +57,25 @@ export const NewDocumentationDialog = ({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   // Lade alle gespeicherten Audio-Dateien aus der Datenbank
-  const { audioFiles: savedAudioFiles, isLoading: isLoadingAudio } = useAudioFiles();
-  
+  const {
+    audioFiles: savedAudioFiles,
+    isLoading: isLoadingAudio
+  } = useAudioFiles();
+
   // Kombiniere neu aufgenommene und bereits gespeicherte Audio-Dateien
   // Filter: Nur Audio-Dateien ohne documentation_id (noch nicht zugeordnet)
   // Transformiere Datenbank-Format zu Frontend-Format
-  const savedAudioFormatted: AudioFile[] = (savedAudioFiles || [])
-    .filter(af => !af.documentation_id)
-    .map(af => ({
-      id: af.id,
-      fileName: af.file_name,
-      createdAt: af.created_at,
-      durationMs: af.duration_ms || 0,
-      blobUrl: af.file_path, // file_path wird als blobUrl verwendet
-      transcriptText: af.transcript_text || undefined,
-    }));
-  
+  const savedAudioFormatted: AudioFile[] = (savedAudioFiles || []).filter(af => !af.documentation_id).map(af => ({
+    id: af.id,
+    fileName: af.file_name,
+    createdAt: af.created_at,
+    durationMs: af.duration_ms || 0,
+    blobUrl: af.file_path,
+    // file_path wird als blobUrl verwendet
+    transcriptText: af.transcript_text || undefined
+  }));
   const availableAudioFiles = [...audioFiles, ...savedAudioFormatted];
-  
   const allAudioFiles = availableAudioFiles;
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -94,8 +83,8 @@ export const NewDocumentationDialog = ({
       caseId: "",
       title: "",
       date: "",
-      todos: "",
-    },
+      todos: ""
+    }
   });
 
   // Generiere Preview Case-ID wenn neuer Fall erstellt wird
@@ -106,29 +95,23 @@ export const NewDocumentationDialog = ({
   }, [showNewCase, cases]);
 
   // Filtere Cases basierend auf ausgewähltem Client
-  const filteredCases = selectedClientId ? cases.filter((c) => c.clientId === selectedClientId) : [];
-
+  const filteredCases = selectedClientId ? cases.filter(c => c.clientId === selectedClientId) : [];
   const handleCreateClient = () => {
     if (!newClientName.trim()) return;
-
     const newClient: Client = {
       id: generateId("client-"),
       name: newClientName.trim(),
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     };
-
-    setClients((prev) => [...prev, newClient]);
+    setClients(prev => [...prev, newClient]);
     form.setValue("clientId", newClient.id);
     setSelectedClientId(newClient.id);
     setNewClientName("");
     setShowNewClient(false);
-
     toast.success(`Client "${newClient.name}" wurde erstellt`);
   };
-
   const handleCreateCase = () => {
     if (!newCaseTitle.trim() || !selectedClientId) return;
-
     const caseId = generateCaseId(cases);
     const newCase: Case = {
       id: generateId("case-"),
@@ -136,19 +119,16 @@ export const NewDocumentationDialog = ({
       clientId: selectedClientId,
       title: newCaseTitle.trim(),
       status: "OPEN",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     };
-
-    setCases((prev) => [...prev, newCase]);
+    setCases(prev => [...prev, newCase]);
     form.setValue("caseId", newCase.id);
     setSelectedCaseId(newCase.id);
     setNewCaseTitle("");
     setShowNewCase(false);
     setPreviewCaseId("");
-
     toast.success(`Fall "${caseId}" wurde erstellt`);
   };
-
   const toggleAudioSelection = (audioId: string) => {
     const newSet = new Set(selectedAudioIds);
     if (newSet.has(audioId)) {
@@ -165,64 +145,50 @@ export const NewDocumentationDialog = ({
     }
     setSelectedAudioIds(newSet);
   };
-
   const handleTranscribe = (audioId: string) => {
     const newTranscripts = new Map(audioTranscripts);
-    newTranscripts.set(
-      audioId,
-      "Beispiel-Protokoll (Mock): Dies ist ein automatisch generiertes Protokoll der Audioaufnahme. In einer echten Implementierung würde hier der transkribierte Text der Aufnahme erscheinen.",
-    );
+    newTranscripts.set(audioId, "Beispiel-Protokoll (Mock): Dies ist ein automatisch generiertes Protokoll der Audioaufnahme. In einer echten Implementierung würde hier der transkribierte Text der Aufnahme erscheinen.");
     setAudioTranscripts(newTranscripts);
   };
-
   const handleSummarize = (audioId: string) => {
     const newSummaries = new Map(audioSummaries);
-    newSummaries.set(
-      audioId,
-      "Beispiel-Zusammenfassung (Mock): Kurze Zusammenfassung der wichtigsten Punkte aus der Audioaufnahme. Hauptthemen wurden identifiziert und strukturiert.",
-    );
+    newSummaries.set(audioId, "Beispiel-Zusammenfassung (Mock): Kurze Zusammenfassung der wichtigsten Punkte aus der Audioaufnahme. Hauptthemen wurden identifiziert und strukturiert.");
     setAudioSummaries(newSummaries);
   };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-
-    const newAttachments: Attachment[] = Array.from(files).map((file) => ({
+    const newAttachments: Attachment[] = Array.from(files).map(file => ({
       id: generateId("att-"),
       fileName: file.name,
       fileType: file.type,
       size: file.size,
-      blobUrl: URL.createObjectURL(file),
+      blobUrl: URL.createObjectURL(file)
     }));
-
-    setAttachments((prev) => [...prev, ...newAttachments]);
+    setAttachments(prev => [...prev, ...newAttachments]);
   };
-
   const removeAttachment = (attachmentId: string) => {
-    setAttachments((prev) => {
-      const attachment = prev.find((a) => a.id === attachmentId);
+    setAttachments(prev => {
+      const attachment = prev.find(a => a.id === attachmentId);
       if (attachment) {
         URL.revokeObjectURL(attachment.blobUrl);
       }
-      return prev.filter((a) => a.id !== attachmentId);
+      return prev.filter(a => a.id !== attachmentId);
     });
   };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       // Sammle ausgewählte AudioFiles
-      const selectedAudios = allAudioFiles.filter((audio) => selectedAudioIds.has(audio.id));
+      const selectedAudios = allAudioFiles.filter(audio => selectedAudioIds.has(audio.id));
 
       // Erstelle kombinierte Protokolle und Zusammenfassungen
       const allSummaries = Array.from(audioSummaries.values()).join("\n\n");
 
       // Füge Protokolle zu den jeweiligen AudioFiles hinzu
-      const audioFilesWithTranscripts = selectedAudios.map((audio) => ({
+      const audioFilesWithTranscripts = selectedAudios.map(audio => ({
         ...audio,
-        transcriptText: audioTranscripts.get(audio.id),
+        transcriptText: audioTranscripts.get(audio.id)
       }));
-
       const newDocumentation: Documentation = {
         id: generateId("doc-"),
         caseId: values.caseId,
@@ -233,7 +199,7 @@ export const NewDocumentationDialog = ({
         todos: values.todos || "",
         summaryText: allSummaries || undefined,
         status: "OPEN",
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
 
       // Warte auf das asynchrone Speichern
@@ -244,7 +210,6 @@ export const NewDocumentationDialog = ({
       // Error wird bereits in handleSaveDocumentation behandelt
     }
   };
-
   const handleClose = () => {
     form.reset();
     setNewClientName("");
@@ -259,14 +224,11 @@ export const NewDocumentationDialog = ({
     setAudioSummaries(new Map());
 
     // Cleanup blob URLs
-    attachments.forEach((att) => URL.revokeObjectURL(att.blobUrl));
+    attachments.forEach(att => URL.revokeObjectURL(att.blobUrl));
     setAttachments([]);
-
     onOpenChange(false);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
+  return <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -274,11 +236,9 @@ export const NewDocumentationDialog = ({
               <DialogTitle>Neue Dokumentation</DialogTitle>
               <DialogDescription>Erstellen Sie eine neue Dokumentation für einen Fall</DialogDescription>
             </div>
-            {(showNewCase || previewCaseId) && (
-              <Badge variant="outline" className="text-lg">
+            {(showNewCase || previewCaseId) && <Badge variant="outline" className="text-lg">
                 {previewCaseId}
-              </Badge>
-            )}
+              </Badge>}
           </div>
         </DialogHeader>
 
@@ -286,258 +246,161 @@ export const NewDocumentationDialog = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Client Auswahl/Erstellung */}
             <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="clientId"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="clientId" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Client *</FormLabel>
                     <div className="flex gap-2">
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedClientId(value);
-                          setSelectedCaseId("");
-                          form.setValue("caseId", "");
-                        }}
-                        value={field.value}
-                        disabled={showNewClient}
-                      >
+                      <Select onValueChange={value => {
+                  field.onChange(value);
+                  setSelectedClientId(value);
+                  setSelectedCaseId("");
+                  form.setValue("caseId", "");
+                }} value={field.value} disabled={showNewClient}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Client auswählen" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {clients.map((client) => (
-                            <SelectItem key={client.id} value={client.id}>
+                          {clients.map(client => <SelectItem key={client.id} value={client.id}>
                               {client.name}
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setShowNewClient(!showNewClient)}
-                      >
+                      <Button type="button" variant="outline" size="icon" onClick={() => setShowNewClient(!showNewClient)}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              {showNewClient && (
-                <div className="flex gap-2 pl-4 border-l-2 border-primary">
-                  <Input
-                    placeholder="Name des neuen Clients"
-                    value={newClientName}
-                    onChange={(e) => setNewClientName(e.target.value)}
-                  />
+              {showNewClient && <div className="flex gap-2 pl-4 border-l-2 border-primary">
+                  <Input placeholder="Name des neuen Clients" value={newClientName} onChange={e => setNewClientName(e.target.value)} />
                   <Button type="button" onClick={handleCreateClient}>
                     Anlegen
                   </Button>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Case Auswahl/Erstellung */}
             <div className="space-y-3">
-              <FormField
-                control={form.control}
-                name="caseId"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="caseId" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Fall *</FormLabel>
                     <div className="flex gap-2">
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedCaseId(value);
-                        }}
-                        value={field.value}
-                        disabled={!selectedClientId || showNewCase}
-                      >
+                      <Select onValueChange={value => {
+                  field.onChange(value);
+                  setSelectedCaseId(value);
+                }} value={field.value} disabled={!selectedClientId || showNewCase}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Fall auswählen" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {filteredCases.map((caseItem) => (
-                            <SelectItem key={caseItem.id} value={caseItem.id}>
+                          {filteredCases.map(caseItem => <SelectItem key={caseItem.id} value={caseItem.id}>
                               {caseItem.caseId} - {caseItem.title}
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setShowNewCase(!showNewCase)}
-                        disabled={!selectedClientId}
-                      >
+                      <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCase(!showNewCase)} disabled={!selectedClientId}>
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              {showNewCase && (
-                <div className="flex gap-2 pl-4 border-l-2 border-primary">
-                  <Input
-                    placeholder="Titel des neuen Falls"
-                    value={newCaseTitle}
-                    onChange={(e) => setNewCaseTitle(e.target.value)}
-                  />
+              {showNewCase && <div className="flex gap-2 pl-4 border-l-2 border-primary">
+                  <Input placeholder="Titel des neuen Falls" value={newCaseTitle} onChange={e => setNewCaseTitle(e.target.value)} />
                   <Button type="button" onClick={handleCreateCase}>
                     Anlegen
                   </Button>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Titel */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="title" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Titel der Dokumentation *</FormLabel>
                   <FormControl>
                     <Input placeholder="z.B. Erstes Treffen" {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
 
             {/* Termin */}
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="date" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Termin *</FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
                       <Input type="datetime-local" {...field} />
                     </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        const now = new Date();
-                        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-                          .toISOString()
-                          .slice(0, 16);
-                        form.setValue("date", localDateTime);
-                      }}
-                    >
+                    <Button type="button" variant="outline" onClick={() => {
+                const now = new Date();
+                const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                form.setValue("date", localDateTime);
+              }}>
                       Heute
                     </Button>
                   </div>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
 
             {/* Audio-Dateien */}
             <div className="space-y-3">
               <Label>Audiodateien auswählen</Label>
 
-              {allAudioFiles.length > 0 ? (
-                <div className="space-y-2 max-h-60 overflow-y-auto rounded-lg border border-border p-3">
-                  {allAudioFiles.map((audio) => {
-                    const isSelected = selectedAudioIds.has(audio.id);
-                    return (
-                      <div key={audio.id} className="space-y-2">
+              {allAudioFiles.length > 0 ? <div className="space-y-2 max-h-60 overflow-y-auto rounded-lg border border-border p-3">
+                  {allAudioFiles.map(audio => {
+                const isSelected = selectedAudioIds.has(audio.id);
+                return <div key={audio.id} className="space-y-2">
                         <div className="flex items-start gap-3 p-2 rounded hover:bg-accent">
-                          <Checkbox
-                            id={`audio-${audio.id}`}
-                            checked={isSelected}
-                            onCheckedChange={() => toggleAudioSelection(audio.id)}
-                          />
+                          <Checkbox id={`audio-${audio.id}`} checked={isSelected} onCheckedChange={() => toggleAudioSelection(audio.id)} />
                           <div className="flex-1">
                             <label htmlFor={`audio-${audio.id}`} className="text-sm font-medium cursor-pointer">
                               {audio.fileName}
                             </label>
                             <p className="text-xs text-muted-foreground">{Math.floor(audio.durationMs / 60000)} min</p>
                           </div>
-                          {isSelected && (
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleTranscribe(audio.id)}
-                              >
-                                <FileAudio className="h-3 w-3 mr-1" />
-                                Transkribieren
-                              </Button>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSummarize(audio.id)}
-                              >
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                Zusammenfassen
-                              </Button>
-                            </div>
-                          )}
+                          {isSelected && <div className="flex gap-1">
+                              
+                              
+                            </div>}
                         </div>
 
                         {/* Show transcript/summary if generated */}
-                        {isSelected && audioTranscripts.has(audio.id) && (
-                          <Alert className="ml-8">
+                        {isSelected && audioTranscripts.has(audio.id) && <Alert className="ml-8">
                             <FileAudio className="h-4 w-4" />
                             <AlertDescription className="text-xs">{audioTranscripts.get(audio.id)}</AlertDescription>
-                          </Alert>
-                        )}
-                        {isSelected && audioSummaries.has(audio.id) && (
-                          <Alert className="ml-8">
+                          </Alert>}
+                        {isSelected && audioSummaries.has(audio.id) && <Alert className="ml-8">
                             <MessageSquare className="h-4 w-4" />
                             <AlertDescription className="text-xs">{audioSummaries.get(audio.id)}</AlertDescription>
-                          </Alert>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <Alert>
+                          </Alert>}
+                      </div>;
+              })}
+                </div> : <Alert>
                   <Mic className="h-4 w-4" />
                   <AlertDescription>
                     Keine Audiodateien verfügbar. Bitte erstellen Sie zuerst eine Audioaufnahme.
                   </AlertDescription>
-                </Alert>
-              )}
+                </Alert>}
             </div>
 
             {/* Datei-Anhänge */}
             <div className="space-y-3">
               <Label>Datei-Anhänge</Label>
               <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  multiple
-                  accept=".pdf,.txt,.docx"
-                  onChange={handleFileUpload}
-                  className="cursor-pointer"
-                />
+                <Input type="file" multiple accept=".pdf,.txt,.docx" onChange={handleFileUpload} className="cursor-pointer" />
                 <Upload className="h-4 w-4 text-muted-foreground" />
               </div>
-              {attachments.length > 0 && (
-                <div className="space-y-2">
-                  {attachments.map((att) => (
-                    <div key={att.id} className="flex items-center justify-between p-2 rounded bg-secondary">
+              {attachments.length > 0 && <div className="space-y-2">
+                  {attachments.map(att => <div key={att.id} className="flex items-center justify-between p-2 rounded bg-secondary">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
                         <span className="text-sm">{att.fileName}</span>
@@ -546,31 +409,21 @@ export const NewDocumentationDialog = ({
                       <Button type="button" size="sm" variant="ghost" onClick={() => removeAttachment(att.id)}>
                         <X className="h-4 w-4" />
                       </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </div>
 
             {/* ToDos */}
-            <FormField
-              control={form.control}
-              name="todos"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="todos" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>ToDos</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Ein ToDo pro Zeile&#10;- Budget prüfen&#10;- Team zusammenstellen"
-                      rows={5}
-                      {...field}
-                    />
+                    <Textarea placeholder="Ein ToDo pro Zeile&#10;- Budget prüfen&#10;- Team zusammenstellen" rows={5} {...field} />
                   </FormControl>
                   <p className="text-xs text-muted-foreground">Ein ToDo pro Zeile</p>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose}>
@@ -581,6 +434,5 @@ export const NewDocumentationDialog = ({
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
