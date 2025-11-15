@@ -87,18 +87,24 @@ export const DocumentationDetail = ({
   };
 
   const handleTranscribe = () => {
+    const newTranscript = "Dies ist ein Beispiel-Transkript (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.";
     setEditedDoc({
       ...editedDoc,
-      transcriptText: "Dies ist ein Beispiel-Transkript (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.",
+      transcriptText: editedDoc.transcriptText 
+        ? `${editedDoc.transcriptText}\n\n---\n\n${newTranscript}`
+        : newTranscript,
       status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
     });
     toast.success("Transkription erstellt (Mock)");
   };
 
   const handleSummarize = () => {
+    const newSummary = "Dies ist eine Beispiel-Zusammenfassung (Mock). In der echten Implementierung würde hier eine KI-generierte Zusammenfassung erscheinen.";
     setEditedDoc({
       ...editedDoc,
-      summaryText: "Dies ist eine Beispiel-Zusammenfassung (Mock). In der echten Implementierung würde hier eine KI-generierte Zusammenfassung erscheinen.",
+      summaryText: editedDoc.summaryText 
+        ? `${editedDoc.summaryText}\n\n---\n\n${newSummary}`
+        : newSummary,
     });
     toast.success("Zusammenfassung erstellt (Mock)");
   };
@@ -365,16 +371,28 @@ export const DocumentationDetail = ({
           )}
 
           {editedDoc.transcriptText && (
-            <div className="mt-4 p-4 bg-muted rounded-md">
-              <h4 className="font-medium mb-2">Transkript</h4>
-              <p className="text-sm text-muted-foreground">{editedDoc.transcriptText}</p>
+            <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
+              <Label htmlFor="transcript">Transkript</Label>
+              <Textarea
+                id="transcript"
+                value={editedDoc.transcriptText}
+                onChange={(e) => setEditedDoc({ ...editedDoc, transcriptText: e.target.value })}
+                rows={8}
+                className="font-mono text-sm"
+              />
             </div>
           )}
 
           {editedDoc.summaryText && (
-            <div className="mt-4 p-4 bg-muted rounded-md">
-              <h4 className="font-medium mb-2">Zusammenfassung</h4>
-              <p className="text-sm text-muted-foreground">{editedDoc.summaryText}</p>
+            <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
+              <Label htmlFor="summary">Zusammenfassung</Label>
+              <Textarea
+                id="summary"
+                value={editedDoc.summaryText}
+                onChange={(e) => setEditedDoc({ ...editedDoc, summaryText: e.target.value })}
+                rows={6}
+                className="text-sm"
+              />
             </div>
           )}
         </CardContent>

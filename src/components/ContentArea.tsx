@@ -72,6 +72,8 @@ export const ContentArea = ({
             clients={clients}
             cases={cases}
             documentations={documentations}
+            setDocumentations={setDocumentations}
+            audioFiles={audioFiles}
           />
         ) : (
           <div className="space-y-6">

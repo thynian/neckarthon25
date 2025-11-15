@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Client, Case, Documentation } from "@/types";
+import { Client, Case, Documentation, AudioFile } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,16 +22,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DocumentationStatusBadge } from "@/components/documentation/DocumentationStatusBadge";
+import { DocumentationDetail } from "@/components/documentation/DocumentationDetail";
 
 interface TeamAreaProps {
   clients: Client[];
   cases: Case[];
   documentations: Documentation[];
+  setDocumentations: React.Dispatch<React.SetStateAction<Documentation[]>>;
+  audioFiles: AudioFile[];
 }
 
 type TeamLevel = "clients" | "cases" | "docs" | "docDetail";
 
-export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
+export const TeamArea = ({ clients, cases, documentations, setDocumentations, audioFiles }: TeamAreaProps) => {
   const [teamSearch, setTeamSearch] = useState("");
   const [teamActiveTab, setTeamActiveTab] = useState<"clients" | "cases" | "docs">("clients");
   const [teamLevel, setTeamLevel] = useState<TeamLevel>("clients");
@@ -40,6 +43,7 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   const [selectedDocumentationId, setSelectedDocumentationId] = useState<string | undefined>();
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [editingDocId, setEditingDocId] = useState<string | null>(null);
 
   // Helper functions
   const getClientName = (clientId: string) => {
@@ -104,16 +108,14 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   };
 
   const handleDocumentationClick = (docId: string, caseId?: string) => {
-    const doc = documentations.find((d) => d.id === docId);
-    if (doc) {
-      setSelectedDocumentationId(docId);
-      setSelectedCaseId(doc.caseId);
-      const relatedCase = cases.find((c) => c.id === doc.caseId);
-      if (relatedCase) {
-        setSelectedClientId(relatedCase.clientId);
-      }
-      setTeamLevel("docDetail");
-    }
+    setEditingDocId(docId);
+  };
+
+  const handleUpdateDocumentation = (updatedDoc: Documentation) => {
+    setDocumentations((prev) =>
+      prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
+    );
+    setEditingDocId(null);
   };
 
   const handleBreadcrumbClients = () => {
@@ -181,6 +183,22 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   const selectedClient = clients.find((c) => c.id === selectedClientId);
   const selectedCase = cases.find((c) => c.id === selectedCaseId);
   const selectedDocumentation = documentations.find((d) => d.id === selectedDocumentationId);
+
+  // Edit mode for documentation
+  const editingDoc = documentations.find((doc) => doc.id === editingDocId);
+
+  if (editingDoc) {
+    return (
+      <DocumentationDetail
+        documentation={editingDoc}
+        clients={clients}
+        cases={cases}
+        audioFiles={audioFiles}
+        onBack={() => setEditingDocId(null)}
+        onSave={handleUpdateDocumentation}
+      />
+    );
+  }
 
   // Render content based on level
   const renderContent = () => {
