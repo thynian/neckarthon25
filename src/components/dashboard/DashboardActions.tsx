@@ -10,8 +10,10 @@ import { useDocumentations } from "@/hooks/useDocumentations";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { AudioFile } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const DashboardActions = () => {
+  const queryClient = useQueryClient();
   const { clients } = useClients();
   const { cases } = useCases();
   const { createDocumentation } = useDocumentations();
@@ -167,6 +169,9 @@ export const DashboardActions = () => {
         }
       }
 
+      // Aktualisiere die Dokumentationsliste
+      queryClient.invalidateQueries({ queryKey: ["documentations"] });
+      
       toast.success("Dokumentation mit allen Dateien gespeichert");
       setShowDocumentationDialog(false);
     } catch (error) {
