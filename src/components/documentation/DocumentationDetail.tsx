@@ -14,6 +14,7 @@ import { generateId } from "@/utils/idGenerator";
 import { DocumentationStatusBadge } from "./DocumentationStatusBadge";
 import { useAudioFiles } from "@/hooks/useAudioFiles";
 import { supabase } from "@/integrations/supabase/client";
+import { transcribeAudioFile } from "@/utils/transcription";
 interface DocumentationDetailProps {
   documentation: Documentation;
   clients: Client[];
@@ -34,6 +35,7 @@ export const DocumentationDetail = ({
 }: DocumentationDetailProps) => {
   const [editedDoc, setEditedDoc] = useState<Documentation>(documentation);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [transcribingAudioId, setTranscribingAudioId] = useState<string | null>(null);
   const [isAddAudioOpen, setIsAddAudioOpen] = useState(false);
   const [isCuratingTopics, setIsCuratingTopics] = useState(false);
   const [curatedTopics, setCuratedTopics] = useState<string[]>(documentation.curatedTopics || []);
@@ -113,22 +115,36 @@ export const DocumentationDetail = ({
     setIsAddAudioOpen(false);
     toast.success("Audiodatei hinzugefügt");
   };
-  const handleTranscribe = (audioId: string) => {
-    const newTranscript =
-      "Dies ist ein Beispiel-Protokoll (Mock). In der echten Implementierung würde hier der transkribierte Text der Audiodateien erscheinen.";
-    setEditedDoc({
-      ...editedDoc,
-      audioFiles: editedDoc.audioFiles.map((af) =>
-        af.id === audioId
-          ? {
-              ...af,
-              transcriptText: af.transcriptText ? `${af.transcriptText}\n\n---\n\n${newTranscript}` : newTranscript,
-            }
-          : af,
-      ),
-      status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
-    });
-    toast.success("Protokollion erstellt (Mock)");
+  const handleTranscribe = async (audioId: string) => {
+    // Finde die Audio-Datei in den gespeicherten Dateien, um den file_path zu erhalten
+    const audioFileData = savedAudioFiles?.find(af => af.id === audioId);
+    
+    if (!audioFileData) {
+      toast.error("Audiodatei nicht gefunden");
+      return;
+    }
+
+    setTranscribingAudioId(audioId);
+    
+    try {
+      const transcript = await transcribeAudioFile(audioId, audioFileData.file_path);
+      
+      // Update the editedDoc with the transcript
+      setEditedDoc({
+        ...editedDoc,
+        audioFiles: editedDoc.audioFiles.map((af) =>
+          af.id === audioId
+            ? {
+                ...af,
+                transcriptText: transcript,
+              }
+            : af,
+        ),
+        status: editedDoc.status === "OPEN" ? "IN_REVIEW" : editedDoc.status,
+      });
+    } finally {
+      setTranscribingAudioId(null);
+    }
   };
   const handleStartCuration = () => {
     const dummyTopics = [
@@ -480,8 +496,9 @@ export const DocumentationDetail = ({
                       )}
                       {playingAudioId === audioFile.id ? "Stop" : "Abspielen"}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleTranscribe(audioFile.id)}>
-                      Protokoll
+                    <Button size="sm" variant="outline" onClick={() => handleTranscribe(audioFile.id)} disabled={transcribingAudioId === audioFile.id}>
+                      <FileText className="h-4 w-4 mr-1" />
+                      {transcribingAudioId === audioFile.id ? "Transkribiere..." : "Protokoll"}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => handleRemoveAudio(audioFile.id)}>
                       <Trash2 className="h-4 w-4" />

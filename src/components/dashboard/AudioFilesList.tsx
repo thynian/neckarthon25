@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, FileText } from "lucide-react";
 import { useAudioFiles } from "@/hooks/useAudioFiles";
 import { supabase } from "@/integrations/supabase/client";
+import { transcribeAudioFile } from "@/utils/transcription";
 
 export const AudioFilesList = () => {
   const { audioFiles, isLoading } = useAudioFiles();
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [transcribingAudioId, setTranscribingAudioId] = useState<string | null>(null);
   const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   
   // Generate public URLs for audio files
@@ -40,31 +42,36 @@ export const AudioFilesList = () => {
     }
 
     if (playingAudioId === audioId) {
-      // Pause the current audio
       audioElement.pause();
       setPlayingAudioId(null);
     } else {
-      // Pause any currently playing audio
       audioRefs.current.forEach((audio, id) => {
         if (id !== audioId) {
           audio.pause();
         }
       });
       
-      // Play the selected audio with error handling
       const playPromise = audioElement.play();
       
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             setPlayingAudioId(audioId);
-            console.log('Audio playing successfully');
           })
           .catch(error => {
             console.error('Error playing audio:', error);
             setPlayingAudioId(null);
           });
       }
+    }
+  };
+
+  const handleTranscribe = async (audioId: string, filePath: string) => {
+    setTranscribingAudioId(audioId);
+    try {
+      await transcribeAudioFile(audioId, filePath);
+    } finally {
+      setTranscribingAudioId(null);
     }
   };
 
@@ -156,6 +163,21 @@ export const AudioFilesList = () => {
                         Play
                       </>
                     )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const audioFile = audioFiles.find(af => af.id === audio.id);
+                      if (audioFile) {
+                        handleTranscribe(audio.id, audioFile.file_path);
+                      }
+                    }}
+                    disabled={transcribingAudioId === audio.id}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <FileText className="mr-1 h-3 w-3" />
+                    {transcribingAudioId === audio.id ? "Transkribiere..." : "Protokoll"}
                   </Button>
                 </div>
               </div>
