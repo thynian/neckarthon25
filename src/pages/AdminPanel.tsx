@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Users } from "lucide-react";
+import { Plus, Edit2, Trash2, Users, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ import { useClients } from "@/hooks/useClients";
 import { toast } from "sonner";
 
 export default function AdminPanel() {
+  const navigate = useNavigate();
   const { clients, isLoading, createClient, updateClient } = useClients();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -81,6 +83,14 @@ export default function AdminPanel() {
       <div className="mx-auto max-w-7xl px-6 py-12">
         {/* Header */}
         <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Zurück zum Dashboard
+          </Button>
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-8 w-8 text-primary" />
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
