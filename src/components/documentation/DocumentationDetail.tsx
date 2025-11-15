@@ -125,7 +125,7 @@ export const DocumentationDetail = ({
   };
   const handleStartCuration = () => {
     const dummyTopics = [
-      "Dummy-Thema 1: Budget" + "abc",
+      "Dummy-Thema 1: \nBudget" + "abc",
       "Dummy-Thema 2: Zeitplan",
       "Dummy-Thema 3: Offene Punkte",
       "Dummy-Thema 4: Nächste Schritte",
