@@ -169,7 +169,7 @@ export const DocumentationDetail = ({
       ...editedDoc,
       status: "VERIFIED",
     });
-    toast.success("Dokumentation als überprüft markiert");
+    toast.success("Dokumentation als fertig markiert");
   };
 
   const handleMarkAsInReview = () => {
@@ -216,7 +216,7 @@ export const DocumentationDetail = ({
           <DocumentationStatusBadge status={editedDoc.status} />
           {editedDoc.status !== "VERIFIED" && (
             <Button size="sm" onClick={handleMarkAsVerified}>
-              Als überprüft markieren
+              Fertig
             </Button>
           )}
           {editedDoc.status === "VERIFIED" && (
