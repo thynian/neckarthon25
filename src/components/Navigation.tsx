@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import { NavLink } from "./NavLink";
-import { Settings, FileText } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Link } from "react-router-dom";
+import heraLogo from "@/assets/hera-logo.png";
 type TabType = "offen" | "mein-bereich" | "team-bereich";
 interface NavigationProps {
   activeTab: TabType;
@@ -26,7 +27,7 @@ export const Navigation = ({
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2 text-xl font-semibold text-foreground hover:text-primary transition-colors">
-              <FileText className="h-6 w-6/12 " />
+              <img src={heraLogo} alt="HERA Logo" className="h-8 w-8" />
               <span className="text-base">HERA</span>
             </Link>
             <div className="flex space-x-1">
