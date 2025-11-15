@@ -175,13 +175,16 @@ export const DocumentationDetail = ({
         return;
       }
 
-      setEditedDoc({
+      const updatedDoc = {
         ...editedDoc,
-        summaryText: data.summary
-      });
+        summaryText: data.summary,
+        curatedTopics: curatedTopics
+      };
       
+      setEditedDoc(updatedDoc);
+      onSave(updatedDoc);
       setIsCuratingTopics(false);
-      toast.success("Zusammenfassung erfolgreich erstellt", { id: "summary-generation" });
+      toast.success("Zusammenfassung erstellt und gespeichert", { id: "summary-generation" });
     } catch (error) {
       console.error("Error in handleFinalizeSummary:", error);
       toast.error("Fehler beim Generieren der Zusammenfassung", { id: "summary-generation" });
