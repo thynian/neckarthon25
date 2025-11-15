@@ -54,15 +54,6 @@ export const RecordingDialog = ({
     }
   }, [audioBlob, recordingState]);
 
-  // Cleanup blob URL on unmount
-  useEffect(() => {
-    return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
-    };
-  }, [blobUrl]);
-
   const handleSave = () => {
     if (!audioBlob || !blobUrl) return;
 
@@ -80,6 +71,10 @@ export const RecordingDialog = ({
   };
 
   const handleClose = () => {
+    // Bereinige blobUrl beim Schließen
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+    }
     resetRecording();
     setFileName("");
     setBlobUrl(null);
