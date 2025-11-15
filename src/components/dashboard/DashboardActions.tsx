@@ -34,7 +34,22 @@ export const DashboardActions = () => {
   };
 
   const handleSaveDocumentation = async (documentation: any) => {
-    console.log("handleSaveDocumentation aufgerufen mit:", documentation);
+    console.log("=== handleSaveDocumentation START ===");
+    console.log("Documentation Objekt:", documentation);
+    console.log("Audio Files:", documentation.audioFiles);
+    console.log("Audio Files Anzahl:", documentation.audioFiles?.length);
+    
+    // Prüfe ob blobs vorhanden sind
+    if (documentation.audioFiles && documentation.audioFiles.length > 0) {
+      documentation.audioFiles.forEach((audio: any, index: number) => {
+        console.log(`Audio ${index}:`, {
+          fileName: audio.fileName,
+          hasBlob: !!audio.blob,
+          blobSize: audio.blob?.size,
+          blobType: audio.blob?.type
+        });
+      });
+    }
     
     try {
       // 1. Erstelle die Dokumentation
