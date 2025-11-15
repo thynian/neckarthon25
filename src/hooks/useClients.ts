@@ -1,12 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export type Client = {
-  id: string;
-  name: string;
-  created_at: string;
-};
+import type { Client } from "@/types";
 
 export const useClients = () => {
   const queryClient = useQueryClient();
@@ -20,7 +15,13 @@ export const useClients = () => {
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data as Client[];
+      
+      // Transform to match Client type
+      return (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        createdAt: item.created_at,
+      })) as Client[];
     },
   });
 

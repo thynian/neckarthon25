@@ -1,5 +1,5 @@
 import { Dashboard } from "./dashboard/Dashboard";
-import { TeamArea } from "./team/TeamArea";
+import { TeamArea } from "./team/TeamAreaSimple";
 import { useClients } from "@/hooks/useClients";
 import { useCases } from "@/hooks/useCases";
 import { useDocumentations } from "@/hooks/useDocumentations";

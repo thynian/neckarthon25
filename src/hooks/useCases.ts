@@ -1,17 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-export type CaseStatus = "OPEN" | "CLOSED";
-
-export type Case = {
-  id: string;
-  case_id: string;
-  client_id: string;
-  title: string;
-  status: CaseStatus;
-  created_at: string;
-};
+import type { Case, CaseStatus } from "@/types";
 
 export const useCases = (clientId?: string) => {
   const queryClient = useQueryClient();
@@ -22,7 +12,7 @@ export const useCases = (clientId?: string) => {
       let query = supabase
         .from("cases")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false});
       
       if (clientId) {
         query = query.eq("client_id", clientId);
@@ -31,7 +21,16 @@ export const useCases = (clientId?: string) => {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as Case[];
+      
+      // Transform to match Case type
+      return (data || []).map(item => ({
+        id: item.id,
+        caseId: item.case_id,
+        clientId: item.client_id,
+        title: item.title,
+        status: item.status as CaseStatus,
+        createdAt: item.created_at,
+      })) as Case[];
     },
   });
 
