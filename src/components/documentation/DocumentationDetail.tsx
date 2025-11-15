@@ -229,6 +229,7 @@ export const DocumentationDetail = ({
     
     onSave(updatedDoc);
     setEditedDoc(updatedDoc);
+    setIsCuratingTopics(false);
     toast.success("Änderungen gespeichert");
   };
   const formatFileSize = (bytes: number): string => {
@@ -355,9 +356,15 @@ export const DocumentationDetail = ({
                   </div>
                 </DialogContent>
               </Dialog>
-              {curatedTopics.length === 0 && (
+              {editedDoc.audioFiles.length > 0 && curatedTopics.length === 0 && (
                 <Button size="sm" variant="outline" onClick={handleStartCuration}>
                   Themen aus Transkript vorschlagen
+                </Button>
+              )}
+              {editedDoc.audioFiles.length > 0 && curatedTopics.length > 0 && !isCuratingTopics && (
+                <Button size="sm" variant="outline" onClick={() => setIsCuratingTopics(true)}>
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  Themen bearbeiten
                 </Button>
               )}
             </div>
@@ -389,7 +396,7 @@ export const DocumentationDetail = ({
                   </div>}
                   </div>)}
 
-          {curatedTopics.length > 0 && (
+          {editedDoc.audioFiles.length > 0 && curatedTopics.length > 0 && isCuratingTopics && (
             <div className="mt-4 p-4 border border-border rounded-md space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-base font-semibold">Themen kuratieren</Label>
@@ -446,7 +453,7 @@ export const DocumentationDetail = ({
             </div>
           )}
 
-          {editedDoc.summaryText && (
+          {editedDoc.audioFiles.length > 0 && editedDoc.summaryText && (
             <div className="mt-4 p-4 bg-muted rounded-md space-y-2">
               <Label htmlFor="summary">Zusammenfassung (über alle Audiodateien)</Label>
               <Textarea id="summary" value={editedDoc.summaryText} onChange={e => setEditedDoc({
