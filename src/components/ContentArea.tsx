@@ -29,7 +29,7 @@ const contentMap: Record<TabType, { title: string; description: string }> = {
 export const ContentArea = ({ activeTab }: ContentAreaProps) => {
   const { clients, isLoading: clientsLoading } = useClients();
   const { cases, isLoading: casesLoading } = useCases();
-  const { documentations, setDocumentations, isLoading: docsLoading } = useDocumentations();
+  const { documentations, isLoading: docsLoading, updateDocumentation, deleteDocumentation } = useDocumentations();
   const { audioFiles, isLoading: audioLoading } = useAudioFiles();
   
   const content = contentMap[activeTab];

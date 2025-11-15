@@ -89,7 +89,15 @@ export const useAudioFiles = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform to match AudioFile type
+      return (data || []).map(af => ({
+        id: af.id,
+        fileName: af.file_name,
+        createdAt: af.created_at,
+        durationMs: af.duration_ms || 0,
+        blobUrl: supabase.storage.from('audio-files').getPublicUrl(af.file_path).data.publicUrl,
+      }));
     },
   });
 
