@@ -43,30 +43,26 @@ export const DashboardActions = ({
 
   return (
     <>
-      <Card>
+      <Card className="h-full">
         <CardHeader>
-          <CardTitle>Aktionen</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Aktionen</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Button
-              size="lg"
-              onClick={handleStartRecording}
-              className="h-24 text-lg"
-            >
-              <Mic className="mr-3 h-6 w-6" />
-              Neue Audioaufnahme starten
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              onClick={handleNewDocumentation}
-              className="h-24 text-lg"
-            >
-              <FileText className="mr-3 h-6 w-6" />
-              Neue Dokumentation anlegen
-            </Button>
-          </div>
+        <CardContent className="space-y-3">
+          <Button
+            onClick={handleStartRecording}
+            className="w-full inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium"
+            variant="outline"
+          >
+            <Mic className="mr-2 h-4 w-4" />
+            Neue Audioaufnahme starten
+          </Button>
+          <Button
+            onClick={handleNewDocumentation}
+            className="w-full inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Neue Dokumentation anlegen
+          </Button>
         </CardContent>
       </Card>
 

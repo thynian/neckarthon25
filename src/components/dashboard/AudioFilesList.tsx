@@ -62,95 +62,72 @@ export const AudioFilesList = ({ documentations, audioFiles }: AudioFilesListPro
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle>Meine Audiodateien</CardTitle>
+        <CardTitle className="text-base sm:text-lg">Meine Audiodateien</CardTitle>
       </CardHeader>
       <CardContent>
         {allAudioFiles.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
+          <p className="text-center text-muted-foreground py-8 text-sm">
             Keine Audiodateien vorhanden
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Dateiname
-                  </th>
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Dokumentation
-                  </th>
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Dauer
-                  </th>
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Datum
-                  </th>
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Vorschau
-                  </th>
-                  <th className="pb-3 text-right text-sm font-medium text-muted-foreground">
-                    Aktionen
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {allAudioFiles.map((audio) => (
-                  <tr key={audio.id} className="border-b border-border/50">
-                    <td className="py-4 text-sm font-medium text-foreground">
-                      {audio.fileName}
-                    </td>
-                    <td className="py-4 text-sm text-muted-foreground">
-                      {audio.docTitle || "—"}
-                    </td>
-                    <td className="py-4 text-sm text-muted-foreground">
-                      {formatDuration(audio.durationMs)}
-                    </td>
-                    <td className="py-4 text-sm text-muted-foreground">
-                      {new Date(audio.createdAt).toLocaleDateString("de-DE", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className="py-4">
-                      <audio controls src={audio.blobUrl} className="h-8" />
-                    </td>
-                    <td className="py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handlePlayAudio(audio.id, audio.blobUrl)}
-                        >
-                          {playingAudioId === audio.id ? (
-                            <>
-                              <Pause className="h-4 w-4 mr-1" />
-                              Stop
-                            </>
-                          ) : (
-                            <>
-                              <Play className="h-4 w-4 mr-1" />
-                              Abspielen
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleAddToDocumentation(audio.id)}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Hinzufügen
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-2">
+            {allAudioFiles.map((audio) => (
+              <div
+                key={audio.id}
+                className="border border-border rounded-lg p-2 sm:p-3 flex flex-col gap-1"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-sm truncate">
+                    {audio.fileName}
+                  </span>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {formatDuration(audio.durationMs)}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(audio.createdAt).toLocaleDateString("de-DE", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                  {audio.docTitle && ` · ${audio.docTitle}`}
+                </div>
+                <div className="mt-1">
+                  <audio controls src={audio.blobUrl} className="w-full h-8" />
+                </div>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handlePlayAudio(audio.id, audio.blobUrl)}
+                    className="text-xs px-2 py-1"
+                  >
+                    {playingAudioId === audio.id ? (
+                      <>
+                        <Pause className="h-3 w-3 mr-1" />
+                        Stop
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-3 w-3 mr-1" />
+                        Abspielen
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleAddToDocumentation(audio.id)}
+                    className="text-xs px-2 py-1"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Zu Dokumentation hinzufügen
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>
