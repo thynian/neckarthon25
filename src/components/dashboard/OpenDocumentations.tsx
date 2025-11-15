@@ -22,75 +22,56 @@ export const OpenDocumentations = ({
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle>Meine offenen Dokumentationen</CardTitle>
+        <CardTitle className="text-base sm:text-lg">Meine offenen Dokumentationen</CardTitle>
       </CardHeader>
       <CardContent>
         {openDocs.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
+          <p className="text-center text-muted-foreground py-8 text-sm">
             Keine offenen Dokumentationen vorhanden
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Titel
-                  </th>
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Fall-ID
-                  </th>
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Datum
-                  </th>
-                  <th className="pb-3 text-left text-sm font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="pb-3 text-right text-sm font-medium text-muted-foreground">
-                    Aktionen
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {openDocs.map((doc) => {
-                  const linkedCase = getCaseById(doc.caseId);
-                  return (
-                    <tr key={doc.id} className="border-b border-border/50">
-                      <td className="py-4 text-sm font-medium text-foreground">
-                        {doc.title}
-                      </td>
-                      <td className="py-4 text-sm text-muted-foreground">
-                        {linkedCase?.caseId || "—"}
-                      </td>
-                      <td className="py-4 text-sm text-muted-foreground">
-                        {new Date(doc.date).toLocaleDateString("de-DE", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td className="py-4">
-                        <Badge variant="secondary">{doc.status}</Badge>
-                      </td>
-                      <td className="py-4 text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => onOpenDocumentation(doc.id)}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Öffnen
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="space-y-2">
+            {openDocs.map((doc) => {
+              const linkedCase = getCaseById(doc.caseId);
+              return (
+                <div
+                  key={doc.id}
+                  className="border border-border rounded-lg p-2 sm:p-3 flex flex-col gap-1"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-sm sm:text-base truncate">
+                      {doc.title}
+                    </span>
+                    <Badge variant="secondary" className="text-xs shrink-0">
+                      {doc.status}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(doc.date).toLocaleDateString("de-DE", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {linkedCase && ` · Fall: ${linkedCase.caseId}`}
+                  </div>
+                  <div className="flex justify-end mt-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onOpenDocumentation(doc.id)}
+                      className="text-xs sm:text-sm px-2 py-1"
+                    >
+                      <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                      Öffnen
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>

@@ -61,33 +61,41 @@ export const Dashboard = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
           Arbeits-Dashboard
         </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg text-muted-foreground">
           Übersicht über offene Dokumentationen und Audiodateien
         </p>
       </div>
 
-      <DashboardActions
-        clients={clients}
-        setClients={setClients}
-        cases={cases}
-        setCases={setCases}
-        audioFiles={audioFiles}
-        setAudioFiles={setAudioFiles}
-        onSaveDocumentation={handleSaveDocumentation}
-      />
-      
-      <OpenDocumentations
-        documentations={documentations}
-        cases={cases}
-        onOpenDocumentation={handleOpenDocumentation}
-      />
-      
-      <AudioFilesList documentations={documentations} audioFiles={audioFiles} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-1">
+          <DashboardActions
+            clients={clients}
+            setClients={setClients}
+            cases={cases}
+            setCases={setCases}
+            audioFiles={audioFiles}
+            setAudioFiles={setAudioFiles}
+            onSaveDocumentation={handleSaveDocumentation}
+          />
+        </div>
+        
+        <div className="lg:col-span-1">
+          <OpenDocumentations
+            documentations={documentations}
+            cases={cases}
+            onOpenDocumentation={handleOpenDocumentation}
+          />
+        </div>
+        
+        <div className="lg:col-span-1">
+          <AudioFilesList documentations={documentations} audioFiles={audioFiles} />
+        </div>
+      </div>
     </div>
   );
 };
