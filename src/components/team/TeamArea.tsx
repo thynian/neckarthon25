@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { DocumentationStatusBadge } from "@/components/documentation/DocumentationStatusBadge";
 import { DocumentationDetail } from "@/components/documentation/DocumentationDetail";
+import { useDocumentations } from "@/hooks/useDocumentations";
 
 interface TeamAreaProps {
   clients: Client[];
@@ -35,6 +36,7 @@ interface TeamAreaProps {
 type TeamLevel = "clients" | "cases" | "docs" | "docDetail";
 
 export const TeamArea = ({ clients, cases, documentations, setDocumentations, audioFiles }: TeamAreaProps) => {
+  const { updateDocumentation } = useDocumentations();
   const [teamSearch, setTeamSearch] = useState("");
   const [teamActiveTab, setTeamActiveTab] = useState<"clients" | "cases" | "docs">("clients");
   const [teamLevel, setTeamLevel] = useState<TeamLevel>("clients");
@@ -111,7 +113,22 @@ export const TeamArea = ({ clients, cases, documentations, setDocumentations, au
     setEditingDocId(docId);
   };
 
-  const handleUpdateDocumentation = (updatedDoc: Documentation) => {
+  const handleUpdateDocumentation = async (updatedDoc: Documentation) => {
+    // Map camelCase to snake_case for database
+    const updates: any = {};
+    if (updatedDoc.title !== undefined) updates.title = updatedDoc.title;
+    if (updatedDoc.date !== undefined) updates.date = updatedDoc.date;
+    if (updatedDoc.todos !== undefined) updates.todos = updatedDoc.todos;
+    if (updatedDoc.status !== undefined) updates.status = updatedDoc.status;
+    if ((updatedDoc as any).transcriptText !== undefined) updates.transcript_text = (updatedDoc as any).transcriptText;
+    if ((updatedDoc as any).summaryText !== undefined) updates.summary_text = (updatedDoc as any).summaryText;
+    
+    await updateDocumentation({
+      id: updatedDoc.id,
+      updates,
+      audioFiles: updatedDoc.audioFiles
+    });
+    
     setDocumentations((prev) =>
       prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
     );

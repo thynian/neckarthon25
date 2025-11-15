@@ -61,6 +61,7 @@ export type Database = {
           file_path: string
           id: string
           mime_type: string
+          transcript_text: string | null
         }
         Insert: {
           created_at?: string
@@ -70,6 +71,7 @@ export type Database = {
           file_path: string
           id?: string
           mime_type: string
+          transcript_text?: string | null
         }
         Update: {
           created_at?: string
@@ -79,6 +81,7 @@ export type Database = {
           file_path?: string
           id?: string
           mime_type?: string
+          transcript_text?: string | null
         }
         Relationships: [
           {

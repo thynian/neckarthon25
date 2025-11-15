@@ -34,7 +34,8 @@ export const Dashboard = () => {
     if ((updatedDoc as any).summaryText !== undefined) updates.summary_text = (updatedDoc as any).summaryText;
     await updateDocumentation({
       id: updatedDoc.id,
-      updates
+      updates,
+      audioFiles: updatedDoc.audioFiles
     });
     setSelectedDocId(null);
   };

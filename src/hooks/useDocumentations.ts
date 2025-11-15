@@ -43,7 +43,7 @@ export const useDocumentations = (caseId?: string) => {
           createdAt: af.created_at,
           durationMs: af.duration_ms || 0,
           blobUrl: `${supabase.storage.from('audio-files').getPublicUrl(af.file_path).data.publicUrl}`,
-          transcriptText: undefined,
+          transcriptText: af.transcript_text,
         })) as AudioFile[],
         attachments: (item.attachments || []).map((att: any) => ({
           id: att.id,
@@ -88,10 +88,12 @@ export const useDocumentations = (caseId?: string) => {
   const updateDocumentation = useMutation({
     mutationFn: async ({ 
       id, 
-      updates 
+      updates,
+      audioFiles
     }: { 
       id: string; 
-      updates: Record<string, any>
+      updates: Record<string, any>;
+      audioFiles?: AudioFile[];
     }) => {
       const { data, error } = await supabase
         .from("documentations")
@@ -105,6 +107,19 @@ export const useDocumentations = (caseId?: string) => {
         .single();
       
       if (error) throw error;
+
+      // Update audio files transcripts if provided
+      if (audioFiles && audioFiles.length > 0) {
+        for (const audioFile of audioFiles) {
+          if (audioFile.transcriptText !== undefined) {
+            await supabase
+              .from("audio_files")
+              .update({ transcript_text: audioFile.transcriptText })
+              .eq("id", audioFile.id);
+          }
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
