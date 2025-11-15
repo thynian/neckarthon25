@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogFTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Play, Pause, Trash2, Plus, FileText, Download, X, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { generateId } from "@/utils/idGenerator";
@@ -125,7 +125,8 @@ export const DocumentationDetail = ({
   };
   const handleStartCuration = () => {
     const dummyTopics = [
-      "Dummy-Thema 1: \nBudget" + "abc",
+      "**Cybermobbing in der Klasse und online: \n Beleidigende Nachrichten über WhatsApp und Instagram, Ausschluss aus der Klassengemeinschaft, emotionale Belastung.\nSammlung von Beispielen, Verständnis der Situation und erste Schutzmaßnahmen (Blockieren, Melden).
+",
       "Dummy-Thema 2: Zeitplan",
       "Dummy-Thema 3: Offene Punkte",
       "Dummy-Thema 4: Nächste Schritte",
