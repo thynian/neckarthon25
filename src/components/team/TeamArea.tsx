@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Client, Case, Documentation, AudioFile } from "@/types";
+import { Client, Case, Documentation } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +101,262 @@ export const TeamArea = ({ clients, cases, documentations }: TeamAreaProps) => {
   const selectedClient = clients.find((c) => c.id === selectedClientId);
   const selectedCase = cases.find((c) => c.id === selectedCaseId);
   const selectedDocumentation = documentations.find((d) => d.id === selectedDocumentationId);
+
+  // Render detail view based on selection
+  const renderDetailView = () => {
+    // Nothing selected
+    if (!selectedClientId && !selectedCaseId && !selectedDocumentationId) {
+      return (
+        <Card>
+          <CardContent className="py-8 sm:py-12">
+            <p className="text-center text-sm sm:text-base text-muted-foreground">
+              Bitte wählen Sie links einen Client, Fall oder eine Dokumentation aus
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Documentation selected (deepest level)
+    if (selectedDocumentationId && selectedDocumentation) {
+      const docCase = cases.find((c) => c.id === selectedDocumentation.caseId);
+      const docClient = docCase ? clients.find((cl) => cl.id === docCase.clientId) : null;
+
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">
+              Dokumentation: {selectedDocumentation.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 sm:space-y-4">
+            {/* Context info bar */}
+            <div className="flex flex-wrap gap-2 sm:gap-4 text-xs text-muted-foreground pb-2 sm:pb-3 border-b">
+              {docClient && (
+                <span>
+                  <span className="font-medium">Client:</span> {docClient.name}
+                </span>
+              )}
+              {docCase && (
+                <span>
+                  <span className="font-medium">Fall:</span> {docCase.title}
+                </span>
+              )}
+            </div>
+
+            {/* Basic info */}
+            <div className="space-y-1">
+              <p className="text-sm">
+                <span className="font-medium">Datum:</span>{" "}
+                {new Date(selectedDocumentation.date).toLocaleDateString("de-DE")}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Status:</span>{" "}
+                <Badge variant={selectedDocumentation.status === "OPEN" ? "secondary" : "outline"}>
+                  {selectedDocumentation.status}
+                </Badge>
+              </p>
+            </div>
+
+            {/* Audio Files */}
+            {selectedDocumentation.audioFiles.length > 0 && (
+              <div>
+                <h4 className="font-medium text-sm sm:text-base mb-2">Audio-Dateien</h4>
+                <div className="space-y-2">
+                  {selectedDocumentation.audioFiles.map((audio) => (
+                    <div
+                      key={audio.id}
+                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-border rounded-lg"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{audio.fileName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Dauer: {formatDuration(audio.durationMs)}
+                        </p>
+                        <audio
+                          id={`audio-${audio.id}`}
+                          src={audio.blobUrl}
+                          onEnded={() => setPlayingAudioId(null)}
+                          className="hidden"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePlayAudio(audio.id, audio.blobUrl)}
+                        className="min-w-[44px] min-h-[36px]"
+                      >
+                        {playingAudioId === audio.id ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Transcript */}
+            {selectedDocumentation.transcriptText && (
+              <div>
+                <h4 className="font-medium text-sm sm:text-base mb-2">Transkript</h4>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedDocumentation.transcriptText}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Summary */}
+            {selectedDocumentation.summaryText && (
+              <div>
+                <h4 className="font-medium text-sm sm:text-base mb-2">Zusammenfassung</h4>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedDocumentation.summaryText}
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Case selected (middle level)
+    if (selectedCaseId && selectedCase) {
+      const caseClient = clients.find((c) => c.id === selectedCase.clientId);
+      const caseDocs = getDocumentationsForCase(selectedCase.id);
+
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Fall: {selectedCase.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 sm:space-y-4">
+            {/* Context info */}
+            {caseClient && (
+              <div className="text-xs text-muted-foreground pb-2 sm:pb-3 border-b">
+                <span className="font-medium">Client:</span> {caseClient.name}
+              </div>
+            )}
+
+            {/* Case details */}
+            <div className="space-y-1">
+              <p className="text-sm">
+                <span className="font-medium">Fall-ID:</span> {selectedCase.caseId}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Status:</span>{" "}
+                <Badge variant={selectedCase.status === "OPEN" ? "secondary" : "outline"}>
+                  {selectedCase.status}
+                </Badge>
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Erstellt:</span>{" "}
+                {new Date(selectedCase.createdAt).toLocaleDateString("de-DE")}
+              </p>
+            </div>
+
+            {/* Documentations list */}
+            <div>
+              <h4 className="font-medium text-sm sm:text-base mb-2">Dokumentationen in diesem Fall</h4>
+              <div className="space-y-2">
+                {caseDocs.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-4">
+                    Keine Dokumentationen vorhanden
+                  </p>
+                ) : (
+                  caseDocs.map((doc) => (
+                    <div
+                      key={doc.id}
+                      onClick={() => setSelectedDocumentationId(doc.id)}
+                      className="p-3 border rounded-lg cursor-pointer transition-colors border-border hover:bg-accent/50 min-h-[44px]"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{doc.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(doc.date).toLocaleDateString("de-DE")}
+                          </p>
+                        </div>
+                        <Badge variant={doc.status === "OPEN" ? "secondary" : "outline"}>
+                          {doc.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Client selected (top level)
+    if (selectedClientId && selectedClient) {
+      const clientCases = getCasesForClient(selectedClient.id);
+
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Client: {selectedClient.name}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 sm:space-y-4">
+            {/* Client details */}
+            <div className="space-y-1">
+              <p className="text-sm">
+                <span className="font-medium">ID:</span> <span className="text-xs">{selectedClient.id}</span>
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Erstellt:</span>{" "}
+                {new Date(selectedClient.createdAt).toLocaleDateString("de-DE")}
+              </p>
+            </div>
+
+            {/* Cases list */}
+            <div>
+              <h4 className="font-medium text-sm sm:text-base mb-2">Fälle dieses Clients</h4>
+              <div className="space-y-2">
+                {clientCases.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-4">
+                    Keine Fälle vorhanden
+                  </p>
+                ) : (
+                  clientCases.map((caseItem) => (
+                    <div
+                      key={caseItem.id}
+                      onClick={() => {
+                        setSelectedCaseId(caseItem.id);
+                        setSelectedDocumentationId(undefined);
+                      }}
+                      className="p-3 border rounded-lg cursor-pointer transition-colors border-border hover:bg-accent/50 min-h-[44px]"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{caseItem.title}</p>
+                          <p className="text-xs text-muted-foreground">{caseItem.caseId}</p>
+                        </div>
+                        <Badge variant={caseItem.status === "OPEN" ? "secondary" : "outline"}>
+                          {caseItem.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return null;
+  };
 
   // Render context info bar
   const renderContextInfo = () => {
