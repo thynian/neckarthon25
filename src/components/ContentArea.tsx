@@ -1,5 +1,6 @@
 import { Client, Case, Documentation, AudioFile } from "@/types";
 import { Dashboard } from "./dashboard/Dashboard";
+import { TeamArea } from "./team/TeamArea";
 
 type TabType = "offen" | "mein-bereich" | "team-bereich";
 
@@ -65,6 +66,12 @@ export const ContentArea = ({
             setDocumentations={setDocumentations}
             audioFiles={audioFiles}
             setAudioFiles={setAudioFiles}
+          />
+        ) : activeTab === "team-bereich" ? (
+          <TeamArea
+            clients={clients}
+            cases={cases}
+            documentations={documentations}
           />
         ) : (
           <div className="space-y-6">
