@@ -50,14 +50,21 @@ export const DocumentationDetail = ({
   // Kombiniere Audio-Dateien: bereits zugeordnete + gespeicherte ohne documentation_id
   const savedAudioFormatted: AudioFile[] = (savedAudioFiles || [])
     .filter((af) => !af.documentation_id)
-    .map((af) => ({
-      id: af.id,
-      fileName: af.file_name,
-      createdAt: af.created_at,
-      durationMs: af.duration_ms || 0,
-      blobUrl: af.file_path,
-      transcriptText: af.transcript_text || undefined,
-    }));
+    .map((af) => {
+      // Generiere die vollständige öffentliche URL von Supabase Storage
+      const { data } = supabase.storage
+        .from("audio-files")
+        .getPublicUrl(af.file_path);
+      
+      return {
+        id: af.id,
+        fileName: af.file_name,
+        createdAt: af.created_at,
+        durationMs: af.duration_ms || 0,
+        blobUrl: data.publicUrl, // Verwende die vollständige öffentliche URL
+        transcriptText: af.transcript_text || undefined,
+      };
+    });
 
   // Verfügbare Audio-Dateien: alle aus Props + gespeicherte, aber nicht die bereits zugeordneten
   const allAvailableAudio = [...audioFiles, ...savedAudioFormatted];
