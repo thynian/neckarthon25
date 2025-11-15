@@ -61,16 +61,16 @@ export const DashboardActions = () => {
             const response = await fetch(audio.blobUrl);
             const blob = await response.blob();
             
-            // Erstelle File-Objekt
-            const file = new File([blob], audio.fileName, { type: 'audio/webm' });
+            // Erstelle File-Objekt mit MP3 als Format
+            const fileName = audio.fileName.replace(/\.[^/.]+$/, '') + '.mp3';
+            const file = new File([blob], fileName, { type: 'audio/mp3' });
             
             // Lade in Storage hoch
-            const fileExt = audio.fileName.split(".").pop();
-            const fileName = `${docData.id}/${Date.now()}.${fileExt}`;
+            const storagePath = `${docData.id}/${Date.now()}.mp3`;
             
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from("audio-files")
-              .upload(fileName, file, {
+              .upload(storagePath, file, {
                 cacheControl: "3600",
                 upsert: false,
               });
@@ -82,15 +82,15 @@ export const DashboardActions = () => {
               .from("audio_files")
               .insert({
                 documentation_id: docData.id,
-                file_name: audio.fileName,
+                file_name: fileName,
                 file_path: uploadData.path,
-                mime_type: 'audio/webm',
+                mime_type: 'audio/mp3',
                 duration_ms: audio.durationMs,
               });
 
             if (audioDbError) throw audioDbError;
             
-            console.log("Audio-Datei hochgeladen:", audio.fileName);
+            console.log("Audio-Datei hochgeladen:", fileName);
           } catch (error) {
             console.error("Fehler beim Audio-Upload:", error);
           }

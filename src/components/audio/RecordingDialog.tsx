@@ -50,7 +50,7 @@ export const RecordingDialog = ({
       
       // Auto-generate filename
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      setFileName(`aufnahme_${timestamp}.webm`);
+      setFileName(`aufnahme_${timestamp}.mp3`);
     }
   }, [audioBlob, recordingState]);
 
@@ -68,7 +68,7 @@ export const RecordingDialog = ({
 
     const audioFile: AudioFile = {
       id: `audio-${Date.now()}`,
-      fileName: fileName || `aufnahme_${Date.now()}.webm`,
+      fileName: fileName || `aufnahme_${Date.now()}.mp3`,
       createdAt: new Date().toISOString(),
       durationMs: recordingTime * 1000,
       blobUrl,
