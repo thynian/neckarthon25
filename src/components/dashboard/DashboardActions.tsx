@@ -7,6 +7,7 @@ import { NewDocumentationDialog } from "@/components/documentation/NewDocumentat
 import { useClients } from "@/hooks/useClients";
 import { useCases } from "@/hooks/useCases";
 import { useDocumentations } from "@/hooks/useDocumentations";
+import { useAudioFiles } from "@/hooks/useAudioFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { AudioFile } from "@/types";
@@ -17,6 +18,7 @@ export const DashboardActions = () => {
   const { clients } = useClients();
   const { cases } = useCases();
   const { createDocumentation } = useDocumentations();
+  const { addAudioFile } = useAudioFiles();
   
   const [showRecordingDialog, setShowRecordingDialog] = useState(false);
   const [showDocumentationDialog, setShowDocumentationDialog] = useState(false);
@@ -26,9 +28,32 @@ export const DashboardActions = () => {
     setShowRecordingDialog(true);
   };
 
-  const handleSaveAudio = (audioFile: AudioFile) => {
-    setAudioFiles(prev => [...prev, audioFile]);
-    console.log("Audio-Datei gespeichert:", audioFile.fileName);
+  const handleSaveAudio = async (audioFile: AudioFile) => {
+    try {
+      if (!audioFile.blob) {
+        toast.error("Kein Audio-Blob verfügbar");
+        return;
+      }
+
+      // Erstelle File-Objekt mit MP3 als Format
+      const fileName = audioFile.fileName.replace(/\.[^/.]+$/, '') + '.mp3';
+      const file = new File([audioFile.blob], fileName, { type: 'audio/mp3' });
+
+      // Lade Audio-Datei direkt in die DB hoch (ohne documentation_id)
+      await addAudioFile({
+        file,
+        documentationId: null as any, // nullable now
+        durationMs: audioFile.durationMs,
+      });
+
+      // Füge auch zum lokalen State hinzu für die Dokumenten-Erstellung
+      setAudioFiles(prev => [...prev, audioFile]);
+      
+      toast.success("Audio-Datei gespeichert");
+    } catch (error) {
+      console.error("Fehler beim Speichern der Audio-Datei:", error);
+      toast.error("Fehler beim Speichern der Audio-Datei");
+    }
   };
 
   const handleNewDocumentation = () => {
@@ -36,23 +61,6 @@ export const DashboardActions = () => {
   };
 
   const handleSaveDocumentation = async (documentation: any) => {
-    console.log("=== handleSaveDocumentation START ===");
-    console.log("Documentation Objekt:", documentation);
-    console.log("Audio Files:", documentation.audioFiles);
-    console.log("Audio Files Anzahl:", documentation.audioFiles?.length);
-    
-    // Prüfe ob blobs vorhanden sind
-    if (documentation.audioFiles && documentation.audioFiles.length > 0) {
-      documentation.audioFiles.forEach((audio: any, index: number) => {
-        console.log(`Audio ${index}:`, {
-          fileName: audio.fileName,
-          hasBlob: !!audio.blob,
-          blobSize: audio.blob?.size,
-          blobType: audio.blob?.type
-        });
-      });
-    }
-    
     try {
       // 1. Erstelle die Dokumentation
       console.log("Erstelle Dokumentation...");

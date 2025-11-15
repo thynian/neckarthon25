@@ -55,7 +55,7 @@ export type Database = {
       audio_files: {
         Row: {
           created_at: string
-          documentation_id: string
+          documentation_id: string | null
           duration_ms: number | null
           file_name: string
           file_path: string
@@ -64,7 +64,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          documentation_id: string
+          documentation_id?: string | null
           duration_ms?: number | null
           file_name: string
           file_path: string
@@ -73,7 +73,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          documentation_id?: string
+          documentation_id?: string | null
           duration_ms?: number | null
           file_name?: string
           file_path?: string
