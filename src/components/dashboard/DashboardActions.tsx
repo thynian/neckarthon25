@@ -6,11 +6,13 @@ import { RecordingDialog } from "@/components/audio/RecordingDialog";
 import { NewDocumentationDialog } from "@/components/documentation/NewDocumentationDialog";
 import { useClients } from "@/hooks/useClients";
 import { useCases } from "@/hooks/useCases";
+import { useDocumentations } from "@/hooks/useDocumentations";
 import type { AudioFile } from "@/types";
 
 export const DashboardActions = () => {
-  const { clients, createClient } = useClients();
-  const { cases, createCase } = useCases();
+  const { clients } = useClients();
+  const { cases } = useCases();
+  const { createDocumentation } = useDocumentations();
   
   const [showRecordingDialog, setShowRecordingDialog] = useState(false);
   const [showDocumentationDialog, setShowDocumentationDialog] = useState(false);
@@ -26,6 +28,20 @@ export const DashboardActions = () => {
 
   const handleNewDocumentation = () => {
     setShowDocumentationDialog(true);
+  };
+
+  const handleSaveDocumentation = async (documentation: any) => {
+    try {
+      await createDocumentation({
+        case_id: documentation.caseId,
+        title: documentation.title,
+        date: documentation.date,
+        todos: documentation.todos || "",
+      });
+      setShowDocumentationDialog(false);
+    } catch (error) {
+      console.error("Fehler beim Speichern:", error);
+    }
   };
 
   return (
@@ -67,7 +83,7 @@ export const DashboardActions = () => {
         cases={cases}
         setCases={() => {}}
         audioFiles={[]}
-        onSave={async () => {}}
+        onSave={handleSaveDocumentation}
       />
     </>
   );
