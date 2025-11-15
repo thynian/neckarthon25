@@ -38,7 +38,6 @@ export const Dashboard = () => {
       updates,
       audioFiles: updatedDoc.audioFiles
     });
-    setSelectedDocId(null);
   };
   const handleDeleteDocumentation = async (docId: string) => {
     await deleteDocumentation(docId);
