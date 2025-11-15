@@ -14,7 +14,7 @@ export const transcribeAudioFile = async (audioId: string, filePath: string) => 
 
     // Prepare FormData
     const formData = new FormData();
-    formData.append("file", audioData, filePath.split("/").pop() || "audio.mp3");
+    formData.append("file", audioData, filePath.split("/").pop());
 
     // Send to transcription API
     const response = await fetch("http://app.maltezeimer.de:443/transcription/upload_file", {
