@@ -516,7 +516,7 @@ export const DocumentationDetail = ({
                         <Textarea
                           value={editingTopicText}
                           onChange={(e) => setEditingTopicText(e.target.value)}
-                          className="flex-1"
+                          className="flex-1 min-h-[120px]"
                           autoFocus
                         />
                         <Button size="sm" onClick={handleSaveEditTopic}>
