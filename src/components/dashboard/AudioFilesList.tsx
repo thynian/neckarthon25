@@ -1,15 +1,27 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, FileText } from "lucide-react";
+import { Play, Pause, FileText, Trash2 } from "lucide-react";
 import { useAudioFiles } from "@/hooks/useAudioFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { transcribeAudioFile } from "@/utils/transcription";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const AudioFilesList = () => {
-  const { audioFiles, isLoading } = useAudioFiles();
+  const { audioFiles, isLoading, removeAudioFile } = useAudioFiles();
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [transcribingAudioId, setTranscribingAudioId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [audioToDelete, setAudioToDelete] = useState<{ id: string; filePath: string; fileName: string } | null>(null);
   const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
   
   // Generate public URLs for audio files
@@ -72,6 +84,23 @@ export const AudioFilesList = () => {
       await transcribeAudioFile(audioId, filePath);
     } finally {
       setTranscribingAudioId(null);
+    }
+  };
+
+  const handleDeleteClick = (audioId: string, filePath: string, fileName: string) => {
+    setAudioToDelete({ id: audioId, filePath, fileName });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!audioToDelete) return;
+    
+    try {
+      await removeAudioFile({ id: audioToDelete.id, filePath: audioToDelete.filePath });
+      setDeleteDialogOpen(false);
+      setAudioToDelete(null);
+    } catch (error) {
+      console.error("Fehler beim Löschen:", error);
     }
   };
 
@@ -179,12 +208,44 @@ export const AudioFilesList = () => {
                     <FileText className="mr-1 h-3 w-3" />
                     {transcribingAudioId === audio.id ? "Transkribiere..." : "Protokoll"}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const audioFile = audioFiles.find(af => af.id === audio.id);
+                      if (audioFile) {
+                        handleDeleteClick(audio.id, audioFile.file_path, audio.fileName);
+                      }
+                    }}
+                    className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="mr-1 h-3 w-3" />
+                    Löschen
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Audiodatei löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Möchten Sie die Datei "{audioToDelete?.fileName}" wirklich löschen? 
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
