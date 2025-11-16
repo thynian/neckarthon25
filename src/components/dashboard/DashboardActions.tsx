@@ -69,15 +69,21 @@ export const DashboardActions = () => {
       const file = new File([audioFile.blob], fileName, { type: 'audio/mp3' });
 
       // Lade Audio-Datei direkt in die DB hoch (ohne documentation_id)
-      await addAudioFile({
+      const uploadedAudio = await addAudioFile({
         file,
         documentationId: null as any, // nullable now
         durationMs: audioFile.durationMs,
       });
 
+      // Aktualisiere audioFile mit der Datenbank-ID
+      const audioFileWithId = { 
+        ...audioFile, 
+        id: uploadedAudio.id // Verwende die ID aus der Datenbank
+      };
+      
       // Füge zum lokalen State hinzu und speichere für Dokumenten-Dialog
-      setAudioFiles(prev => [...prev, audioFile]);
-      setPendingAudioForDocumentation(audioFile);
+      setAudioFiles(prev => [...prev, audioFileWithId]);
+      setPendingAudioForDocumentation(audioFileWithId);
       
       toast.success("Audio-Datei gespeichert");
       
@@ -118,51 +124,59 @@ export const DashboardActions = () => {
 
       console.log("Dokumentation erstellt:", docData.id);
 
-      // 2. Lade Audio-Dateien hoch
+      // 2. Verknüpfe Audio-Dateien
       if (documentation.audioFiles && documentation.audioFiles.length > 0) {
-        console.log("Starte Audio-Upload für", documentation.audioFiles.length, "Dateien");
+        console.log("Verknüpfe Audio-Dateien mit Dokumentation:", documentation.audioFiles.length, "Dateien");
         for (const audio of documentation.audioFiles) {
           try {
-            // Verwende das gespeicherte Blob direkt
-            if (!audio.blob) {
-              console.error("Kein Blob verfügbar für Audio:", audio.fileName);
-              throw new Error(`Kein Blob verfügbar für ${audio.fileName}`);
+            // Prüfe ob die Audio-Datei bereits in der DB existiert (hat eine UUID als ID)
+            const isExistingAudio = audio.id && audio.id.includes('-'); // UUID Format
+            
+            if (isExistingAudio) {
+              // Audio-Datei existiert bereits - nur documentation_id aktualisieren
+              console.log("Verknüpfe existierende Audio-Datei:", audio.id);
+              const { error: updateError } = await supabase
+                .from("audio_files")
+                .update({ documentation_id: docData.id })
+                .eq("id", audio.id);
+              
+              if (updateError) throw updateError;
+              console.log("Audio-Datei verknüpft:", audio.id);
+            } else if (audio.blob) {
+              // Neue Audio-Datei mit Blob - hochladen
+              console.log("Lade neue Audio-Datei hoch:", audio.fileName);
+              
+              const fileName = audio.fileName.replace(/\.[^/.]+$/, '') + '.mp3';
+              const file = new File([audio.blob], fileName, { type: 'audio/mp3' });
+              
+              // Lade in Storage hoch
+              const storagePath = `${docData.id}/${Date.now()}.mp3`;
+              
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from("audio-files")
+                .upload(storagePath, file, {
+                  cacheControl: "3600",
+                  upsert: false,
+                });
+
+              if (uploadError) throw uploadError;
+
+              // Erstelle Datenbank-Eintrag
+              const { error: audioDbError } = await supabase
+                .from("audio_files")
+                .insert({
+                  documentation_id: docData.id,
+                  file_name: fileName,
+                  file_path: uploadData.path,
+                  mime_type: 'audio/mp3',
+                  duration_ms: audio.durationMs,
+                });
+
+              if (audioDbError) throw audioDbError;
+              console.log("Neue Audio-Datei hochgeladen:", fileName);
             }
-            
-            // Erstelle File-Objekt mit MP3 als Format
-            const fileName = audio.fileName.replace(/\.[^/.]+$/, '') + '.mp3';
-            const file = new File([audio.blob], fileName, { type: 'audio/mp3' });
-            
-            console.log("Uploade Audio-Datei:", fileName, "Größe:", file.size);
-            
-            // Lade in Storage hoch
-            const storagePath = `${docData.id}/${Date.now()}.mp3`;
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from("audio-files")
-              .upload(storagePath, file, {
-                cacheControl: "3600",
-                upsert: false,
-              });
-
-            if (uploadError) throw uploadError;
-
-            // Erstelle Datenbank-Eintrag
-            const { error: audioDbError } = await supabase
-              .from("audio_files")
-              .insert({
-                documentation_id: docData.id,
-                file_name: fileName,
-                file_path: uploadData.path,
-                mime_type: 'audio/mp3',
-                duration_ms: audio.durationMs,
-              });
-
-            if (audioDbError) throw audioDbError;
-            
-            console.log("Audio-Datei hochgeladen:", fileName);
           } catch (error) {
-            console.error("Fehler beim Audio-Upload:", error);
+            console.error("Fehler beim Verarbeiten der Audio-Datei:", error);
           }
         }
       }
