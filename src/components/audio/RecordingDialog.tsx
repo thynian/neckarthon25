@@ -96,7 +96,7 @@ export const RecordingDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+        <div className="space-y-3 sm:space-y-4 py-3 sm:py-4 min-w-0 overflow-hidden">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
