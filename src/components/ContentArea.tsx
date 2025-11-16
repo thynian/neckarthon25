@@ -30,13 +30,7 @@ const contentMap: Record<TabType, { title: string; description: string }> = {
 export const ContentArea = ({ activeTab }: ContentAreaProps) => {
   const { clients, isLoading: clientsLoading } = useClients();
   const { cases, isLoading: casesLoading } = useCases();
-  const { documentations: docsData, isLoading: docsLoading } = useDocumentations();
-  
-  const [documentations, setDocumentations] = useState(docsData);
-  
-  useEffect(() => {
-    setDocumentations(docsData);
-  }, [docsData]);
+  const { documentations, isLoading: docsLoading } = useDocumentations();
   
   const content = contentMap[activeTab];
 
@@ -72,7 +66,6 @@ export const ContentArea = ({ activeTab }: ContentAreaProps) => {
             clients={clients}
             cases={cases}
             documentations={documentations}
-            setDocumentations={setDocumentations}
             audioFiles={[]}
           />
         ) : (

@@ -29,14 +29,13 @@ interface TeamAreaProps {
   clients: Client[];
   cases: Case[];
   documentations: Documentation[];
-  setDocumentations: React.Dispatch<React.SetStateAction<Documentation[]>>;
   audioFiles: AudioFile[];
 }
 
 type TeamLevel = "clients" | "cases" | "docs" | "docDetail";
 
-export const TeamArea = ({ clients, cases, documentations, setDocumentations, audioFiles }: TeamAreaProps) => {
-  const { updateDocumentation } = useDocumentations();
+export const TeamArea = ({ clients, cases, documentations, audioFiles }: TeamAreaProps) => {
+  const { updateDocumentation, deleteDocumentation } = useDocumentations();
   const [teamSearch, setTeamSearch] = useState("");
   const [teamActiveTab, setTeamActiveTab] = useState<"clients" | "cases" | "docs">("clients");
   const [teamLevel, setTeamLevel] = useState<TeamLevel>("clients");
@@ -129,14 +128,11 @@ export const TeamArea = ({ clients, cases, documentations, setDocumentations, au
       audioFiles: updatedDoc.audioFiles
     });
     
-    setDocumentations((prev) =>
-      prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
-    );
     setEditingDocId(null);
   };
 
-  const handleDeleteDocumentation = (docId: string) => {
-    setDocumentations((prev) => prev.filter((doc) => doc.id !== docId));
+  const handleDeleteDocumentation = async (docId: string) => {
+    await deleteDocumentation(docId);
   };
 
   const handleBreadcrumbClients = () => {
