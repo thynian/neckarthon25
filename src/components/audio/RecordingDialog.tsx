@@ -85,7 +85,7 @@ export const RecordingDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[500px] p-4 sm:p-6">
+      <DialogContent className="max-w-[85vw] sm:max-w-[500px] p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Audio-Aufnahme</DialogTitle>
           <DialogDescription className="text-sm">
