@@ -15,6 +15,7 @@ import { DocumentationStatusBadge } from "./DocumentationStatusBadge";
 import { useAudioFiles } from "@/hooks/useAudioFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { transcribeAudioFile } from "@/utils/transcription";
+import { extractTopicsFromTranscripts } from "@/utils/topicExtraction";
 interface DocumentationDetailProps {
   documentation: Documentation;
   clients: Client[];
