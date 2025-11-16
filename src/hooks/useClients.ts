@@ -66,10 +66,29 @@ export const useClients = () => {
     },
   });
 
+  const deleteClient = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("clients")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      toast.success("Mandant erfolgreich gelöscht");
+    },
+    onError: (error) => {
+      toast.error(`Fehler beim Löschen: ${error.message}`);
+    },
+  });
+
   return {
     clients,
     isLoading,
     createClient: createClient.mutateAsync,
     updateClient: updateClient.mutateAsync,
+    deleteClient: deleteClient.mutateAsync,
   };
 };

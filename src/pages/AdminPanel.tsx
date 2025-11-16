@@ -14,6 +14,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -43,7 +53,7 @@ import type { Case, CaseStatus } from "@/types";
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const { clients, isLoading: clientsLoading, createClient, updateClient } = useClients();
+  const { clients, isLoading: clientsLoading, createClient, updateClient, deleteClient } = useClients();
   const { cases, isLoading: casesLoading, createCase, updateCase } = useCases();
   
   // Client states
@@ -51,6 +61,7 @@ export default function AdminPanel() {
   const [isEditClientDialogOpen, setIsEditClientDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<{ id: string; name: string } | null>(null);
   const [newClientName, setNewClientName] = useState("");
+  const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
   
   // Case states
   const [isCreateCaseDialogOpen, setIsCreateCaseDialogOpen] = useState(false);
@@ -92,6 +103,17 @@ export default function AdminPanel() {
   const openEditClientDialog = (client: { id: string; name: string; createdAt: string }) => {
     setEditingClient({ id: client.id, name: client.name });
     setIsEditClientDialogOpen(true);
+  };
+
+  const handleDeleteClient = async () => {
+    if (!deleteClientId) return;
+    
+    try {
+      await deleteClient(deleteClientId);
+      setDeleteClientId(null);
+    } catch (error) {
+      console.error("Fehler beim Löschen:", error);
+    }
   };
 
   // Case handlers
@@ -272,13 +294,22 @@ export default function AdminPanel() {
                           })}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditClientDialog(client)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditClientDialog(client)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeleteClientId(client.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -561,6 +592,24 @@ export default function AdminPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Client Alert Dialog */}
+      <AlertDialog open={!!deleteClientId} onOpenChange={() => setDeleteClientId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mandant löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Diese Aktion kann nicht rückgängig gemacht werden. Der Mandant wird dauerhaft gelöscht.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteClient}>
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
