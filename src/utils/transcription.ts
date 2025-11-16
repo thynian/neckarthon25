@@ -5,46 +5,21 @@ export const transcribeAudioFile = async (audioId: string, filePath: string) => 
   try {
     toast.info("Transkription wird gestartet...");
 
-    // Download audio file
-    const { data: audioData, error: downloadError } = await supabase.storage.from("audio-files").download(filePath);
-
-    if (downloadError) {
-      throw new Error(`Fehler beim Laden der Datei: ${downloadError.message}`);
-    }
-
-    // Prepare formdata
-    const formData = new FormData();
-    formData.append("file", audioData, filePath.split("/").pop());
-
-    // Send to transcription API
-    const response = await fetch("http://app.maltezeimer.de:443/transcription/upload_file", {
-      method: "POST",
-      body: formData,
+    // Call Supabase Edge Function for transcription
+    const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+      body: { audioFileId: audioId }
     });
 
-    if (!response.ok) {
-      throw new Error(`API-Fehler: ${response.status} ${response.statusText}`);
+    if (error) {
+      throw new Error(`Edge Function Fehler: ${error.message}`);
     }
 
-    const result = await response.json();
-    const transcript = result.transcript || result.text || "";
-
-    if (!transcript) {
-      throw new Error("Kein Transkript in der Antwort erhalten");
-    }
-
-    // Update audio file with transcript
-    const { error: updateError } = await supabase
-      .from("audio_files")
-      .update({ transcript_text: transcript })
-      .eq("id", audioId);
-
-    if (updateError) {
-      throw new Error(`Fehler beim Speichern: ${updateError.message}`);
+    if (!data.success || !data.transcript) {
+      throw new Error("Keine Transkription erhalten");
     }
 
     toast.success("Transkription erfolgreich abgeschlossen");
-    return transcript;
+    return data.transcript;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
     toast.error(`Transkription fehlgeschlagen: ${errorMessage}`);
