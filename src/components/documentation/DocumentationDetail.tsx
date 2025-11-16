@@ -437,7 +437,36 @@ export const DocumentationDetail = ({
                     Audio hinzufügen
                   </Button>
                 </DialogTrigger>
-...
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Audio-Datei hinzufügen</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                    {availableAudioFiles.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">
+                        Keine verfügbaren Audio-Dateien
+                      </p>
+                    ) : (
+                      availableAudioFiles.map((audioFile) => (
+                        <div
+                          key={audioFile.id}
+                          className="flex items-center justify-between p-3 border rounded-md hover:bg-accent cursor-pointer"
+                          onClick={() => handleAddAudio(audioFile)}
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium">{audioFile.fileName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(audioFile.createdAt).toLocaleDateString('de-DE')} • {formatDuration(audioFile.durationMs)}
+                            </p>
+                          </div>
+                          <Button size="sm" variant="ghost">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </DialogContent>
               </Dialog>
               {editedDoc.audioFiles.length > 0 && curatedTopics.length === 0 && (
                 <Button size="sm" variant="outline" onClick={handleStartCuration} className="w-full md:w-auto">
