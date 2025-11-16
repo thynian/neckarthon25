@@ -58,23 +58,37 @@ export const useAudioFiles = () => {
 
   const removeAudioFile = useMutation({
     mutationFn: async ({ id, filePath }: { id: string; filePath: string }) => {
-      // Delete from database
+      console.log("Lösche Audiodatei:", { id, filePath });
+      
+      // Delete from storage first
+      try {
+        await deleteAudioFile(filePath);
+        console.log("Datei aus Storage gelöscht:", filePath);
+      } catch (storageError) {
+        console.error("Fehler beim Löschen aus Storage:", storageError);
+        throw new Error("Fehler beim Löschen der Datei aus dem Storage");
+      }
+
+      // Then delete from database
       const { error: dbError } = await supabase
         .from("audio_files")
         .delete()
         .eq("id", id);
 
-      if (dbError) throw dbError;
-
-      // Delete from storage
-      await deleteAudioFile(filePath);
+      if (dbError) {
+        console.error("Fehler beim Löschen aus Datenbank:", dbError);
+        throw dbError;
+      }
+      
+      console.log("Eintrag aus Datenbank gelöscht:", id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documentations"] });
       queryClient.invalidateQueries({ queryKey: ["audio-files"] });
-      toast.success("Audiodatei erfolgreich gelöscht");
+      toast.success("Audiodatei und Datei erfolgreich gelöscht");
     },
     onError: (error) => {
+      console.error("Fehler beim Löschen:", error);
       toast.error(`Fehler beim Löschen: ${error.message}`);
     },
   });
