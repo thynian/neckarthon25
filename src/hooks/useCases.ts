@@ -65,11 +65,18 @@ export const useCases = (clientId?: string) => {
       updates 
     }: { 
       id: string; 
-      updates: Partial<Pick<Case, "title" | "status">> 
+      updates: Partial<Pick<Case, "title" | "status" | "clientId">> & { client_id?: string }
     }) => {
+      // Transform clientId to client_id for database
+      const dbUpdates = { ...updates };
+      if (updates.clientId) {
+        dbUpdates.client_id = updates.clientId;
+        delete dbUpdates.clientId;
+      }
+      
       const { data, error } = await supabase
         .from("cases")
-        .update(updates)
+        .update(dbUpdates)
         .eq("id", id)
         .select()
         .single();

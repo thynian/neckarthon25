@@ -151,6 +151,7 @@ export default function AdminPanel() {
         updates: { 
           title: editingCase.title.trim(),
           status: editingCase.status,
+          clientId: editingCase.clientId,
         } 
       });
       setEditingCase(null);
@@ -545,6 +546,26 @@ export default function AdminPanel() {
                   disabled
                   className="bg-muted"
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-case-client">Mandant</Label>
+                <Select
+                  value={editingCase.clientId}
+                  onValueChange={(value) =>
+                    setEditingCase({ ...editingCase, clientId: value })
+                  }
+                >
+                  <SelectTrigger id="edit-case-client">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-case-title">Titel</Label>
