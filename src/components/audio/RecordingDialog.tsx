@@ -85,7 +85,7 @@ export const RecordingDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-w-[95vw] sm:max-w-[500px] p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Audio-Aufnahme</DialogTitle>
           <DialogDescription className="text-sm">
@@ -157,20 +157,20 @@ export const RecordingDialog = ({
           {/* Preview & Save */}
           {recordingState === "stopped" && blobUrl && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="fileName" className="text-sm">Dateiname</Label>
                 <Input
                   id="fileName"
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
                   placeholder="aufnahme.webm"
-                  className="text-sm w-full"
+                  className="text-sm w-full min-w-0"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label className="text-sm">Vorschau</Label>
-                <audio controls src={blobUrl} className="w-full h-10 sm:h-12" />
+                <audio controls src={blobUrl} className="w-full min-w-0 max-w-full h-10 sm:h-12" />
               </div>
             </>
           )}
