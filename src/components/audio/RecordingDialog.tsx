@@ -85,7 +85,7 @@ export const RecordingDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-[500px] sm:w-full p-4 sm:p-6">
+      <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Audio-Aufnahme</DialogTitle>
           <DialogDescription className="text-sm">
@@ -135,7 +135,7 @@ export const RecordingDialog = ({
           )}
 
           {(recordingState === "recording" || recordingState === "paused") && (
-            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:space-x-2">
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
               {recordingState === "recording" ? (
                 <Button variant="secondary" onClick={pauseRecording} className="w-full sm:w-auto">
                   <Pause className="mr-2 h-4 w-4" />
@@ -164,7 +164,7 @@ export const RecordingDialog = ({
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
                   placeholder="aufnahme.webm"
-                  className="text-sm"
+                  className="text-sm w-full"
                 />
               </div>
 
@@ -177,20 +177,18 @@ export const RecordingDialog = ({
         </div>
 
         {recordingState === "stopped" && (
-          <DialogFooter className="flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto order-last sm:order-first">
               Abbrechen
             </Button>
             <Button variant="outline" onClick={() => handleSave(false)} disabled={!audioBlob} className="w-full sm:w-auto">
               <Save className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Nur Speichern</span>
-              <span className="sm:hidden">Speichern</span>
+              Nur Speichern
             </Button>
             {onSaveAndCreateDocumentation && (
               <Button onClick={() => handleSave(true)} disabled={!audioBlob} className="w-full sm:w-auto">
                 <Save className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Speichern & Dokumentation erstellen</span>
-                <span className="sm:hidden">Speichern & Doku</span>
+                Dokumentation starten
               </Button>
             )}
           </DialogFooter>
